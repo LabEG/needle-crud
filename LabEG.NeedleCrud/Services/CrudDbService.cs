@@ -15,27 +15,27 @@ where TEntity : class, IEntity<TId>, new()
 
     public CrudDbService(TDbContext dbContext, ICrudDbRepository<TDbContext, TEntity, TId> repository)
     {
-        this.DBContext = dbContext;
-        this.Repository = repository;
+        DBContext = dbContext;
+        Repository = repository;
     }
 
     public virtual async Task<TEntity> Create(TEntity entity)
     {
-        TEntity resultEntity = await this.Repository.Create(entity);
-        await this.SaveContext();
+        TEntity resultEntity = await Repository.Create(entity);
+        await SaveContext();
         return resultEntity;
     }
 
     public virtual async Task<TEntity> GetById(TId id)
     {
-        TEntity resultEntity = await this.Repository.GetById(id);
-        await this.SaveContext();
+        TEntity resultEntity = await Repository.GetById(id);
+        await SaveContext();
         return resultEntity;
     }
 
     public virtual async Task<IList<TEntity>> GetAll()
     {
-        IList<TEntity> resultEntities = await this.Repository.GetAll();
+        IList<TEntity> resultEntities = await Repository.GetAll();
         return resultEntities;
     }
 
@@ -43,8 +43,8 @@ where TEntity : class, IEntity<TId>, new()
     {
         try
         {
-            await this.Repository.Update(id, entity);
-            await this.SaveContext();
+            await Repository.Update(id, entity);
+            await SaveContext();
         }
         catch (Exception e)
         {
@@ -55,22 +55,22 @@ where TEntity : class, IEntity<TId>, new()
 
     public virtual async Task Delete(TId id)
     {
-        await this.Repository.Delete(id);
-        await this.SaveContext();
+        await Repository.Delete(id);
+        await SaveContext();
     }
 
     public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query)
     {
-        return await this.Repository.GetPaged(query);
+        return await Repository.GetPaged(query);
     }
 
     public virtual async Task<TEntity> GetGraph(TId id, JObject graph)
     {
-        return await this.Repository.GetGraph(id, graph);
+        return await Repository.GetGraph(id, graph);
     }
 
     protected virtual async Task SaveContext()
     {
-        await this.DBContext.SaveChangesAsync();
+        await DBContext.SaveChangesAsync();
     }
 }

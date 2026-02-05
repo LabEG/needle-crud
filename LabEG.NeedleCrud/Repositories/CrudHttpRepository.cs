@@ -18,19 +18,19 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
 
     public CrudHttpRepository(string baseAddress, string endPoint)
     {
-        this.BaseAdress = baseAddress;
-        this.EndPoint = endPoint;
-        this.Client = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
+        BaseAdress = baseAddress;
+        EndPoint = endPoint;
+        Client = new HttpClient() { Timeout = TimeSpan.FromSeconds(10) };
     }
 
     public async Task<TEntity> Create(TEntity entity)
     {
-        return await this.CreateByUrl(entity, this.BaseAdress + "/" + this.EndPoint);
+        return await CreateByUrl(entity, BaseAdress + "/" + EndPoint);
     }
 
     public async Task<TEntity> CreateByUrl(TEntity entity, string url)
     {
-        return await this.PostAsync(
+        return await PostAsync(
             url,
             new StringContent(
                 JsonConvert.SerializeObject(entity),
@@ -42,23 +42,23 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
 
     public async Task Delete(TId id)
     {
-        await this.DeleteAsync(this.BaseAdress + "/" + this.EndPoint + "/" + id);
+        await DeleteAsync(BaseAdress + "/" + EndPoint + "/" + id);
     }
 
     public async Task<TEntity> GetById(TId id)
     {
-        return await this.GetAsync(this.BaseAdress + "/" + this.EndPoint + "/" + id);
+        return await GetAsync(BaseAdress + "/" + EndPoint + "/" + id);
     }
 
     public async Task<IList<TEntity>> GetAll()
     {
-        return await this.GetAllAsync(this.BaseAdress + "/" + this.EndPoint);
+        return await GetAllAsync(BaseAdress + "/" + EndPoint);
     }
 
     public async Task Update(TId id, TEntity entity)
     {
-        await this.PutAsync(
-            this.BaseAdress + "/" + this.EndPoint + "/" + id,
+        await PutAsync(
+            BaseAdress + "/" + EndPoint + "/" + id,
             new StringContent(
                 JsonConvert.SerializeObject(entity),
                 Encoding.UTF8,
@@ -69,7 +69,7 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
 
     public async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity> data = null)
     {
-        List<string> gets = new List<string>();
+        List<string> gets = [];
 
         if (query.PageNumber > 0)
         {
@@ -137,17 +137,17 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
             gets.Add($"graph={HttpUtility.UrlPathEncode(JsonConvert.SerializeObject(query.Graph))}");
         }
 
-        string url = this.BaseAdress + "/" + this.EndPoint + "/paged?" + string.Join("&", gets);
-        HttpResponseMessage httpResponseMessage = await this.Client.GetAsync(url);
-        this.CheckResponseStatus(httpResponseMessage);
+        string url = BaseAdress + "/" + EndPoint + "/paged?" + string.Join("&", gets);
+        HttpResponseMessage httpResponseMessage = await Client.GetAsync(url);
+        CheckResponseStatus(httpResponseMessage);
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<PagedList<TEntity>>(response);
     }
 
     public async Task<TEntity> GetGraph(TId id, JObject graph)
     {
-        return await this.GetAsync(
-            this.BaseAdress + "/" + this.EndPoint + "/" + id + "/graph?" +
+        return await GetAsync(
+            BaseAdress + "/" + EndPoint + "/" + id + "/graph?" +
             "graph=" + JsonConvert.SerializeObject(graph)
         );
     }
@@ -181,7 +181,7 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
         // tomcat exception
         if (responseBody.IndexOf("<") == 0)
         {
-            Regex rgx = new Regex("<b>description</b> <u>(.+?)</u>");
+            Regex rgx = new("<b>description</b> <u>(.+?)</u>");
             Match match = rgx.Match(responseBody);
             throw new Exception("WebServerException - " + match.Groups[1] ?? httpResponseMessage.ReasonPhrase ?? "Ошибка не указана");
         }
@@ -192,8 +192,8 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
     // DeleteAsync
     protected async Task DeleteAsync(string requestUri, CancellationToken cancellationToken = new CancellationToken())
     {
-        HttpResponseMessage httpResponseMessage = await this.Client.DeleteAsync(requestUri, cancellationToken);
-        this.CheckResponseStatus(httpResponseMessage);
+        HttpResponseMessage httpResponseMessage = await Client.DeleteAsync(requestUri, cancellationToken);
+        CheckResponseStatus(httpResponseMessage);
     }
 
     // GetAsync
@@ -203,8 +203,8 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
         CancellationToken cancellationToken = new CancellationToken()
     )
     {
-        HttpResponseMessage httpResponseMessage = await this.Client.GetAsync(requestUri, completionOption, cancellationToken);
-        this.CheckResponseStatus(httpResponseMessage);
+        HttpResponseMessage httpResponseMessage = await Client.GetAsync(requestUri, completionOption, cancellationToken);
+        CheckResponseStatus(httpResponseMessage);
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<TEntity>(response);
     }
@@ -215,8 +215,8 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
         CancellationToken cancellationToken = new CancellationToken()
     )
     {
-        HttpResponseMessage httpResponseMessage = await this.Client.GetAsync(requestUri, completionOption, cancellationToken);
-        this.CheckResponseStatus(httpResponseMessage);
+        HttpResponseMessage httpResponseMessage = await Client.GetAsync(requestUri, completionOption, cancellationToken);
+        CheckResponseStatus(httpResponseMessage);
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<TEntity[]>(response);
     }
@@ -228,8 +228,8 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
         CancellationToken cancellationToken = new CancellationToken()
     )
     {
-        HttpResponseMessage httpResponseMessage = await this.Client.PostAsync(requestUri, content, cancellationToken);
-        this.CheckResponseStatus(httpResponseMessage);
+        HttpResponseMessage httpResponseMessage = await Client.PostAsync(requestUri, content, cancellationToken);
+        CheckResponseStatus(httpResponseMessage);
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<TEntity>(response);
     }
@@ -241,8 +241,8 @@ public class CrudHttpRepository<TEntity, TId> : ICrudHttpRepository<TEntity, TId
         CancellationToken cancellationToken = new CancellationToken()
     )
     {
-        HttpResponseMessage httpResponseMessage = await this.Client.PutAsync(requestUri, content, cancellationToken);
-        this.CheckResponseStatus(httpResponseMessage);
+        HttpResponseMessage httpResponseMessage = await Client.PutAsync(requestUri, content, cancellationToken);
+        CheckResponseStatus(httpResponseMessage);
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<TEntity>(response);
     }

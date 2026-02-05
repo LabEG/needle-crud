@@ -24,7 +24,7 @@ public class CrudFileRepository<TEntity, TId> : ICrudFileRepository<TEntity, TId
             IEntity<long> ent = (IEntity<long>)entity;
             if (ent.Id == 0)
             {
-                ent.Id = this.countId++;
+                ent.Id = countId++;
             }
         }
         else if (typeof(TId) == typeof(string))
@@ -36,29 +36,29 @@ public class CrudFileRepository<TEntity, TId> : ICrudFileRepository<TEntity, TId
             }
         }
 
-        string fileName = "data_" + this.ExcapeFileName(entity.Id.ToString()) + ".json";
+        string fileName = "data_" + ExcapeFileName(entity.Id.ToString()) + ".json";
 
         string json = JsonConvert.SerializeObject(entity);
 
         // todo: check
-        File.WriteAllText(Path.Combine(this.folderPath, fileName), json);
+        File.WriteAllText(Path.Combine(folderPath, fileName), json);
 
-        return await this.GetById(entity.Id);
+        return await GetById(entity.Id);
     }
 
     public async Task Delete(TId id)
     {
         await Task.Run(() =>
         {
-            string fullFileName = Path.Combine(this.folderPath, "data_" + this.ExcapeFileName(id.ToString()) + ".json");
-            FileInfo fileInfo = new FileInfo(fullFileName);
+            string fullFileName = Path.Combine(folderPath, "data_" + ExcapeFileName(id.ToString()) + ".json");
+            FileInfo fileInfo = new(fullFileName);
             fileInfo.Delete();
         });
     }
 
     public async Task<TEntity> GetById(TId id)
     {
-        string fileName = "data_" + this.ExcapeFileName(id.ToString()) + ".json";
+        string fileName = "data_" + ExcapeFileName(id.ToString()) + ".json";
         return await GetByFileName(fileName);
     }
 
@@ -69,7 +69,7 @@ public class CrudFileRepository<TEntity, TId> : ICrudFileRepository<TEntity, TId
         {
             try
             {
-                DirectoryInfo folder = new DirectoryInfo(this.folderPath);
+                DirectoryInfo folder = new(folderPath);
                 FileInfo[] files = folder.GetFiles();
                 TEntity[] entities = new TEntity[files.Length];
 
@@ -92,11 +92,11 @@ public class CrudFileRepository<TEntity, TId> : ICrudFileRepository<TEntity, TId
     {
         await Task.CompletedTask;
 
-        string fileName = "data_" + this.ExcapeFileName(id.ToString()) + ".json";
+        string fileName = "data_" + ExcapeFileName(id.ToString()) + ".json";
         string json = JsonConvert.SerializeObject(entity);
 
         // todo: check
-        File.WriteAllText(Path.Combine(this.folderPath, fileName), json);
+        File.WriteAllText(Path.Combine(folderPath, fileName), json);
     }
 
     public async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity> data = null)
@@ -115,15 +115,15 @@ public class CrudFileRepository<TEntity, TId> : ICrudFileRepository<TEntity, TId
     {
         await Task.CompletedTask;
 
-        string json = File.ReadAllText(Path.Combine(this.folderPath, fileName));
+        string json = File.ReadAllText(Path.Combine(folderPath, fileName));
         TEntity entity = JsonConvert.DeserializeObject<TEntity>(json);
         return entity;
     }
 
     protected void SetPath(string path)
     {
-        this.folderPath = path;
-        DirectoryInfo folder = new DirectoryInfo(this.folderPath);
+        folderPath = path;
+        DirectoryInfo folder = new(folderPath);
         if (!folder.Exists)
         {
             folder.Create();
@@ -134,9 +134,9 @@ public class CrudFileRepository<TEntity, TId> : ICrudFileRepository<TEntity, TId
             FileInfo[] files = folder.GetFiles();
             if (files.Length > 0)
             {
-                this.countId = files.Select(file => long.Parse(Path.GetFileNameWithoutExtension(file.Name).Split('_')[1])).Max();
+                countId = files.Select(file => long.Parse(Path.GetFileNameWithoutExtension(file.Name).Split('_')[1])).Max();
             }
-            this.countId++;
+            countId++;
         }
     }
 

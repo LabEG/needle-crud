@@ -18,20 +18,20 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
     public CrudDbRepository(TDbContext dbContext)
     {
-        this.DBContext = dbContext;
+        DBContext = dbContext;
     }
 
     public virtual async Task<TEntity> Create(TEntity entity)
     {
         await Task.Delay(0);
-        entity.Id = default(TId);
-        this.DBContext.Set<TEntity>().Update(entity);
+        entity.Id = default;
+        DBContext.Set<TEntity>().Update(entity);
         return entity;
     }
 
     public virtual async Task<TEntity> GetById(TId id)
     {
-        TEntity resultEntity = await this.DBContext
+        TEntity resultEntity = await DBContext
             .Set<TEntity>()
             .FirstOrDefaultAsync((entity) => entity.Id.Equals(id));
         if (resultEntity == null)
@@ -43,7 +43,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
     public virtual async Task<IList<TEntity>> GetAll()
     {
-        return await this.DBContext.Set<TEntity>().ToListAsync();
+        return await DBContext.Set<TEntity>().ToListAsync();
     }
 
     public virtual async Task Update(TId id, TEntity entity)
@@ -51,35 +51,35 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         await Task.Delay(0);
 
         entity.Id = id;
-        EntityEntry<TEntity> ent = this.DBContext.Set<TEntity>().Update(entity);
+        EntityEntry<TEntity> ent = DBContext.Set<TEntity>().Update(entity);
     }
 
     public virtual async Task Delete(TId id)
     {
-        TEntity entity = await this.GetById(id);
-        this.DBContext.Set<TEntity>().Remove(entity);
+        TEntity entity = await GetById(id);
+        DBContext.Set<TEntity>().Remove(entity);
     }
 
     public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity> qData = null)
     {
-        PagedList<TEntity> resultEntity = new PagedList<TEntity>();
+        PagedList<TEntity> resultEntity = new();
         resultEntity.PageMeta.PageNumber = query.PageNumber;
         resultEntity.PageMeta.PageSize = query.PageSize;
 
-        IQueryable<TEntity> queryableData = qData != null ? qData : this.DBContext
+        IQueryable<TEntity> queryableData = qData != null ? qData : DBContext
             .Set<TEntity>();
 
         if (query.Graph is JObject)
         {
-            IList<string> listOfProps = this.ExtractIncludes(query.Graph);
+            IList<string> listOfProps = ExtractIncludes(query.Graph);
             foreach (string prop in listOfProps)
             {
                 queryableData = queryableData.Include(prop);
             }
         }
 
-        queryableData = this.AddFilter(queryableData, query.Filter);
-        queryableData = this.AddSort(queryableData, query.Sort);
+        queryableData = AddFilter(queryableData, query.Filter);
+        queryableData = AddSort(queryableData, query.Sort);
 
         // count total elements
         int countPage = await queryableData.CountAsync();
@@ -103,9 +103,9 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
     public virtual async Task<TEntity> GetGraph(TId id, JObject graph)
     {
-        IQueryable<TEntity> graphQuery = this.DBContext.Set<TEntity>();
+        IQueryable<TEntity> graphQuery = DBContext.Set<TEntity>();
 
-        IList<string> listOfProps = this.ExtractIncludes(graph);
+        IList<string> listOfProps = ExtractIncludes(graph);
 
         foreach (string prop in listOfProps)
         {
@@ -129,7 +129,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                 if (!string.IsNullOrEmpty(filter.Property))
                 {
                     ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-                    Expression memberExpression = this.GetMemberExpression(filter.Property, param, typeof(TEntity));
+                    Expression memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
                     if (memberExpression is MemberExpression)
                     {
                         Expression body = null;
@@ -138,7 +138,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                         {
                             body = Expression.LessThan(
                                 memberExpression,
-                                Expression.Constant(this.ToType(filter.Value, memberExpression.Type))
+                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
                             );
                         }
 
@@ -146,7 +146,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                         {
                             body = Expression.LessThanOrEqual(
                                 memberExpression,
-                                Expression.Constant(this.ToType(filter.Value, memberExpression.Type))
+                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
                             );
                         }
 
@@ -154,7 +154,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                         {
                             body = Expression.Equal(
                                 memberExpression,
-                                Expression.Constant(this.ToType(filter.Value, memberExpression.Type))
+                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
                             );
                         }
 
@@ -162,7 +162,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                         {
                             body = Expression.GreaterThanOrEqual(
                                 memberExpression,
-                                Expression.Constant(this.ToType(filter.Value, memberExpression.Type))
+                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
                             );
                         }
 
@@ -170,7 +170,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                         {
                             body = Expression.GreaterThan(
                                 memberExpression,
-                                Expression.Constant(this.ToType(filter.Value, memberExpression.Type))
+                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
                             );
                         }
 
@@ -179,7 +179,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                             body = Expression.Call(
                                 memberExpression,
                                 typeof(string).GetMethod("Contains", new[] { typeof(string) }),
-                                Expression.Constant(this.ToType(filter.Value, memberExpression.Type))
+                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
                             );
                         }
 
@@ -218,7 +218,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                 if (!string.IsNullOrEmpty(sort.Property))
                 {
                     ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-                    Expression memberExpression = this.GetMemberExpression(sort.Property, param, typeof(TEntity));
+                    Expression memberExpression = GetMemberExpression(sort.Property, param, typeof(TEntity));
 
                     if (memberExpression is MemberExpression)
                     {
@@ -258,21 +258,18 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
     protected IList<string> ExtractIncludes(JObject graph, IList<string> listOfProps = null, string previosProp = null)
     {
-        if (listOfProps == null)
-        {
-            listOfProps = new List<string>();
-        }
+        listOfProps ??= [];
 
         foreach (KeyValuePair<string, JToken> prop in graph)
         {
             if (prop.Value.ToObject<object>() is object)
             {
-                string deepProp = previosProp == null ? this.ToCamelCase(prop.Key) : (previosProp + "." + this.ToCamelCase(prop.Key));
-                this.ExtractIncludes((JObject)prop.Value, listOfProps, deepProp);
+                string deepProp = previosProp == null ? ToCamelCase(prop.Key) : (previosProp + "." + ToCamelCase(prop.Key));
+                ExtractIncludes((JObject)prop.Value, listOfProps, deepProp);
             }
             else if (prop.Value.ToObject<object>() == null)
             {
-                listOfProps.Add((previosProp is string ? previosProp + "." : "") + this.ToCamelCase(prop.Key));
+                listOfProps.Add((previosProp is string ? previosProp + "." : "") + ToCamelCase(prop.Key));
             } // else ignore
         }
 
@@ -287,7 +284,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         Expression memberExpression = param;
         foreach (string member in nestedProperty.Split('.'))
         {
-            string propName = this.ToCamelCase(member);
+            string propName = ToCamelCase(member);
             PropertyInfo sortableProperty = elementType.GetProperty(propName);
 
             if (sortableProperty is PropertyInfo) // if not null
