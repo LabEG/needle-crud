@@ -2,11 +2,10 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using LabEG.NeedleCrud.Models.Entities;
+using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json.Linq;
-using SampleSolution.Core.Models.Exceptions;
 
 namespace LabEG.NeedleCrud.Repositories;
 
@@ -23,9 +22,9 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
     public virtual async Task<TEntity> Create(TEntity entity)
     {
-        await Task.Delay(0);
         entity.Id = default;
-        DBContext.Set<TEntity>().Update(entity);
+        await DBContext.Set<TEntity>().AddAsync(entity);
+
         return entity;
     }
 
@@ -33,11 +32,9 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     {
         TEntity resultEntity = await DBContext
             .Set<TEntity>()
-            .FirstOrDefaultAsync((entity) => entity.Id.Equals(id));
-        if (resultEntity == null)
-        {
-            throw new ObjectNotFoundException();
-        }
+            .FirstOrDefaultAsync((entity) => entity.Id!.Equals(id)) ??
+                throw new ObjectNotFoundException($"{typeof(TEntity).Name} with ID '{id}' not found");
+
         return resultEntity;
     }
 
@@ -48,10 +45,14 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
     public virtual async Task Update(TId id, TEntity entity)
     {
-        await Task.Delay(0);
+        bool exists = await DBContext.Set<TEntity>().AnyAsync(e => e.Id!.Equals(id));
+        if (!exists)
+        {
+            throw new ObjectNotFoundException($"{typeof(TEntity).Name} with ID '{id}' not found");
+        }
 
         entity.Id = id;
-        EntityEntry<TEntity> ent = DBContext.Set<TEntity>().Update(entity);
+        DBContext.Set<TEntity>().Update(entity);
     }
 
     public virtual async Task Delete(TId id)
@@ -60,16 +61,15 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         DBContext.Set<TEntity>().Remove(entity);
     }
 
-    public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity> qData = null)
+    public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity>? qData = null)
     {
         PagedList<TEntity> resultEntity = new();
         resultEntity.PageMeta.PageNumber = query.PageNumber;
         resultEntity.PageMeta.PageSize = query.PageSize;
 
-        IQueryable<TEntity> queryableData = qData != null ? qData : DBContext
-            .Set<TEntity>();
+        IQueryable<TEntity> queryableData = qData ?? DBContext.Set<TEntity>();
 
-        if (query.Graph is JObject)
+        if (query.Graph is not null)
         {
             IList<string> listOfProps = ExtractIncludes(query.Graph);
             foreach (string prop in listOfProps)
@@ -112,27 +112,25 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
             graphQuery = graphQuery.Include(prop);
         }
 
-        TEntity resultEntity = await graphQuery.FirstOrDefaultAsync((entity) => entity.Id.Equals(id));
-        if (resultEntity == null)
-        {
-            throw new ObjectNotFoundException();
-        }
+        TEntity? resultEntity = await graphQuery.FirstOrDefaultAsync((entity) => entity.Id!.Equals(id)) ??
+            throw new ObjectNotFoundException($"{typeof(TEntity).Name} with ID '{id}' not found");
+
         return resultEntity;
     }
 
-    protected IQueryable<TEntity> AddFilter(IQueryable<TEntity> queryableData, IList<PagedListQueryFilter> filters)
+    protected IQueryable<TEntity> AddFilter(IQueryable<TEntity> queryableData, IList<PagedListQueryFilter>? filters)
     {
-        if (filters is List<PagedListQueryFilter>)
+        if (filters is not null)
         {
             foreach (PagedListQueryFilter filter in filters)
             {
                 if (!string.IsNullOrEmpty(filter.Property))
                 {
                     ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-                    Expression memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
-                    if (memberExpression is MemberExpression)
+                    Expression? memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
+                    if (memberExpression is not null)
                     {
-                        Expression body = null;
+                        Expression? body = null;
 
                         if (filter.Method == PagedListQueryFilterMethod.Less)
                         {
@@ -178,7 +176,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                         {
                             body = Expression.Call(
                                 memberExpression,
-                                typeof(string).GetMethod("Contains", new[] { typeof(string) }),
+                                typeof(string).GetMethod("Contains", [typeof(string)])!,
                                 Expression.Constant(ToType(filter.Value, memberExpression.Type))
                             );
                         }
@@ -208,9 +206,9 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return queryableData;
     }
 
-    protected IQueryable<TEntity> AddSort(IQueryable<TEntity> queryableData, IList<PagedListQuerySort> sorts)
+    protected IQueryable<TEntity> AddSort(IQueryable<TEntity> queryableData, IList<PagedListQuerySort>? sorts)
     {
-        if (sorts is List<PagedListQuerySort>)
+        if (sorts is not null)
         {
             int sortIndex = 0;
             foreach (PagedListQuerySort sort in sorts)
@@ -218,7 +216,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                 if (!string.IsNullOrEmpty(sort.Property))
                 {
                     ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-                    Expression memberExpression = GetMemberExpression(sort.Property, param, typeof(TEntity));
+                    Expression? memberExpression = GetMemberExpression(sort.Property, param, typeof(TEntity));
 
                     if (memberExpression is MemberExpression)
                     {
@@ -229,22 +227,22 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                             MethodCallExpression call = Expression.Call(
                                 typeof(Queryable),
                                 sortIndex == 0 ? "OrderBy" : "ThenBy",
-                                new Type[] { typeof(TEntity), selector.Body.Type },
+                                [typeof(TEntity), selector.Body.Type],
                                 queryableData.Expression,
                                 selector
                             );
-                            queryableData = queryableData.Provider.CreateQuery(call) as IQueryable<TEntity>;
+                            queryableData = (IQueryable<TEntity>)queryableData.Provider.CreateQuery(call);
                         }
                         else
                         {
                             MethodCallExpression call = Expression.Call(
                                 typeof(Queryable),
                                 sortIndex == 0 ? "OrderByDescending" : "ThenByDescending",
-                                new Type[] { typeof(TEntity), selector.Body.Type },
+                                [typeof(TEntity), selector.Body.Type],
                                 queryableData.Expression,
                                 selector
                             );
-                            queryableData = queryableData.Provider.CreateQuery(call) as IQueryable<TEntity>;
+                            queryableData = (IQueryable<TEntity>)queryableData.Provider.CreateQuery(call);
                         }
 
                         sortIndex++;
@@ -256,18 +254,18 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return queryableData;
     }
 
-    protected IList<string> ExtractIncludes(JObject graph, IList<string> listOfProps = null, string previosProp = null)
+    protected IList<string> ExtractIncludes(JObject graph, IList<string>? listOfProps = null, string? previosProp = null)
     {
         listOfProps ??= [];
 
-        foreach (KeyValuePair<string, JToken> prop in graph)
+        foreach (KeyValuePair<string, JToken?> prop in graph)
         {
-            if (prop.Value.ToObject<object>() is object)
+            if (prop.Value?.ToObject<object>() is object)
             {
                 string deepProp = previosProp == null ? ToCamelCase(prop.Key) : (previosProp + "." + ToCamelCase(prop.Key));
                 ExtractIncludes((JObject)prop.Value, listOfProps, deepProp);
             }
-            else if (prop.Value.ToObject<object>() == null)
+            else if (prop.Value?.ToObject<object>() == null)
             {
                 listOfProps.Add((previosProp is string ? previosProp + "." : "") + ToCamelCase(prop.Key));
             } // else ignore
@@ -276,7 +274,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return listOfProps;
     }
 
-    protected Expression GetMemberExpression(string nestedProperty, ParameterExpression param, Type entityType)
+    protected Expression? GetMemberExpression(string nestedProperty, ParameterExpression param, Type entityType)
     {
         // https://stackoverflow.com/questions/16208214/construct-lambdaexpression-for-nested-property-from-string
 
@@ -285,9 +283,9 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         foreach (string member in nestedProperty.Split('.'))
         {
             string propName = ToCamelCase(member);
-            PropertyInfo sortableProperty = elementType.GetProperty(propName);
+            PropertyInfo? sortableProperty = elementType.GetProperty(propName);
 
-            if (sortableProperty is PropertyInfo) // if not null
+            if (sortableProperty is not null)
             {
                 memberExpression = Expression.PropertyOrField(memberExpression, member);
                 elementType = sortableProperty.PropertyType;
@@ -306,7 +304,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return value.First().ToString().ToUpper() + string.Join("", value.Skip(1));
     }
 
-    protected object ToType(string value, Type type)
+    protected object? ToType(string value, Type type)
     {
         return TypeDescriptor.GetConverter(type).ConvertFromInvariantString(value);
     }
