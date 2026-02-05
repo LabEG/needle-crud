@@ -1,4 +1,3 @@
-using FluentAssertions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
@@ -13,14 +12,14 @@ public class PagedListQueryTests
     public void Constructor_WithNullParameters_ShouldUseDefaultValues()
     {
         // Act
-        var query = new PagedListQuery(null, null, null, null, null);
+        PagedListQuery query = new(null, null, null, null, null);
 
         // Assert
-        query.PageSize.Should().Be(10);
-        query.PageNumber.Should().Be(1);
-        query.Filter.Should().BeNull();
-        query.Sort.Should().BeNull();
-        query.Graph.Should().BeNull();
+        Assert.Equal(10, query.PageSize);
+        Assert.Equal(1, query.PageNumber);
+        Assert.Null(query.Filter);
+        Assert.Null(query.Sort);
+        Assert.Null(query.Graph);
     }
 
     [Theory]
@@ -30,11 +29,11 @@ public class PagedListQueryTests
     public void Constructor_WithValidPageSizeAndNumber_ShouldSetCorrectly(int pageSize, int pageNumber)
     {
         // Act
-        var query = new PagedListQuery(pageSize, pageNumber, null, null, null);
+        PagedListQuery query = new(pageSize, pageNumber, null, null, null);
 
         // Assert
-        query.PageSize.Should().Be(pageSize);
-        query.PageNumber.Should().Be(pageNumber);
+        Assert.Equal(pageSize, query.PageSize);
+        Assert.Equal(pageNumber, query.PageNumber);
     }
 
     #endregion
@@ -48,14 +47,14 @@ public class PagedListQueryTests
         const string filter = "name~=~John";
 
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter.Should().NotBeNull();
-        query.Filter.Should().HaveCount(1);
-        query.Filter![0].Property.Should().Be("Name");
-        query.Filter[0].Method.Should().Be(PagedListQueryFilterMethod.Equal);
-        query.Filter[0].Value.Should().Be("John");
+        Assert.NotNull(query.Filter);
+        PagedListQueryFilter filterItem = Assert.Single(query.Filter);
+        Assert.Equal("Name", filterItem.Property);
+        Assert.Equal(PagedListQueryFilterMethod.Equal, query.Filter[0].Method);
+        Assert.Equal("John", query.Filter[0].Value);
     }
 
     [Fact]
@@ -65,23 +64,23 @@ public class PagedListQueryTests
         const string filter = "name~like~John,age~>=~18,city~=~NY";
 
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter.Should().NotBeNull();
-        query.Filter.Should().HaveCount(3);
+        Assert.NotNull(query.Filter);
+        Assert.Equal(3, query.Filter.Count);
 
-        query.Filter![0].Property.Should().Be("Name");
-        query.Filter[0].Method.Should().Be(PagedListQueryFilterMethod.Like);
-        query.Filter[0].Value.Should().Be("John");
+        Assert.Equal("Name", query.Filter[0].Property);
+        Assert.Equal(PagedListQueryFilterMethod.Like, query.Filter[0].Method);
+        Assert.Equal("John", query.Filter[0].Value);
 
-        query.Filter[1].Property.Should().Be("Age");
-        query.Filter[1].Method.Should().Be(PagedListQueryFilterMethod.GreatOrEqual);
-        query.Filter[1].Value.Should().Be("18");
+        Assert.Equal("Age", query.Filter[1].Property);
+        Assert.Equal(PagedListQueryFilterMethod.GreatOrEqual, query.Filter[1].Method);
+        Assert.Equal("18", query.Filter[1].Value);
 
-        query.Filter[2].Property.Should().Be("City");
-        query.Filter[2].Method.Should().Be(PagedListQueryFilterMethod.Equal);
-        query.Filter[2].Value.Should().Be("NY");
+        Assert.Equal("City", query.Filter[2].Property);
+        Assert.Equal(PagedListQueryFilterMethod.Equal, query.Filter[2].Method);
+        Assert.Equal("NY", query.Filter[2].Value);
     }
 
     [Theory]
@@ -95,12 +94,12 @@ public class PagedListQueryTests
     public void Constructor_WithDifferentFilterMethods_ShouldParseCorrectly(string filter, PagedListQueryFilterMethod expectedMethod)
     {
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter.Should().NotBeNull();
-        query.Filter.Should().HaveCount(1);
-        query.Filter![0].Method.Should().Be(expectedMethod);
+        Assert.NotNull(query.Filter);
+        PagedListQueryFilter filterItem = Assert.Single(query.Filter);
+        Assert.Equal(expectedMethod, filterItem.Method);
     }
 
     [Fact]
@@ -110,11 +109,11 @@ public class PagedListQueryTests
         const string filter = "name~=~John%20Doe";
 
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter.Should().NotBeNull();
-        query.Filter![0].Value.Should().Be("John Doe");
+        Assert.NotNull(query.Filter);
+        Assert.Equal("John Doe", query.Filter[0].Value);
     }
 
     [Fact]
@@ -124,10 +123,10 @@ public class PagedListQueryTests
         const string filter = "userName~=~test";
 
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter![0].Property.Should().Be("UserName");
+        Assert.Equal("UserName", query.Filter![0].Property);
     }
 
     #endregion
@@ -140,12 +139,9 @@ public class PagedListQueryTests
         // Arrange
         const string filter = "name~unknown~John";
 
-        // Act
-        Action act = () => new PagedListQuery(null, null, filter, null, null);
-
-        // Assert
-        act.Should().Throw<BadHttpRequestException>()
-            .WithMessage("Unknown filter method");
+        // Act & Assert
+        BadHttpRequestException exception = Assert.Throws<BadHttpRequestException>(() => new PagedListQuery(null, null, filter, null, null));
+        Assert.Equal("Unknown filter method", exception.Message);
     }
 
     [Theory]
@@ -155,20 +151,20 @@ public class PagedListQueryTests
     public void Constructor_WithInvalidFilterFormat_ShouldNotAddFilter(string filter)
     {
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter.Should().BeNullOrEmpty();
+        Assert.True(query.Filter == null || query.Filter.Count == 0);
     }
 
     [Fact]
     public void Constructor_WithEmptyFilterString_ShouldNotCreateFilters()
     {
         // Act
-        var query = new PagedListQuery(null, null, string.Empty, null, null);
+        PagedListQuery query = new(null, null, string.Empty, null, null);
 
         // Assert
-        query.Filter.Should().BeNull();
+        Assert.Null(query.Filter);
     }
 
     #endregion
@@ -182,13 +178,13 @@ public class PagedListQueryTests
         const string sort = "name~asc";
 
         // Act
-        var query = new PagedListQuery(null, null, null, sort, null);
+        PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        query.Sort.Should().NotBeNull();
-        query.Sort.Should().HaveCount(1);
-        query.Sort![0].Property.Should().Be("Name");
-        query.Sort[0].Direction.Should().Be(PagedListQuerySortDirection.Asc);
+        Assert.NotNull(query.Sort);
+        PagedListQuerySort sortItem = Assert.Single(query.Sort);
+        Assert.Equal("Name", sortItem.Property);
+        Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
     }
 
     [Fact]
@@ -198,20 +194,20 @@ public class PagedListQueryTests
         const string sort = "name~asc,age~desc,createdDate~asc";
 
         // Act
-        var query = new PagedListQuery(null, null, null, sort, null);
+        PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        query.Sort.Should().NotBeNull();
-        query.Sort.Should().HaveCount(3);
+        Assert.NotNull(query.Sort);
+        Assert.Equal(3, query.Sort.Count);
 
-        query.Sort![0].Property.Should().Be("Name");
-        query.Sort[0].Direction.Should().Be(PagedListQuerySortDirection.Asc);
+        Assert.Equal("Name", query.Sort[0].Property);
+        Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
 
-        query.Sort[1].Property.Should().Be("Age");
-        query.Sort[1].Direction.Should().Be(PagedListQuerySortDirection.Desc);
+        Assert.Equal("Age", query.Sort[1].Property);
+        Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
 
-        query.Sort[2].Property.Should().Be("CreatedDate");
-        query.Sort[2].Direction.Should().Be(PagedListQuerySortDirection.Asc);
+        Assert.Equal("CreatedDate", query.Sort[2].Property);
+        Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[2].Direction);
     }
 
     [Theory]
@@ -223,11 +219,11 @@ public class PagedListQueryTests
     public void Constructor_WithDifferentSortDirections_ShouldParseCorrectly(string sort, PagedListQuerySortDirection expectedDirection)
     {
         // Act
-        var query = new PagedListQuery(null, null, null, sort, null);
+        PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        query.Sort.Should().NotBeNull();
-        query.Sort![0].Direction.Should().Be(expectedDirection);
+        Assert.NotNull(query.Sort);
+        Assert.Equal(expectedDirection, query.Sort[0].Direction);
     }
 
     [Fact]
@@ -237,10 +233,10 @@ public class PagedListQueryTests
         const string sort = "name~invalid";
 
         // Act
-        var query = new PagedListQuery(null, null, null, sort, null);
+        PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        query.Sort![0].Direction.Should().Be(PagedListQuerySortDirection.Desc);
+        Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort![0].Direction);
     }
 
     #endregion
@@ -253,20 +249,20 @@ public class PagedListQueryTests
     public void Constructor_WithInvalidSortFormat_ShouldNotAddSort(string sort)
     {
         // Act
-        var query = new PagedListQuery(null, null, null, sort, null);
+        PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        query.Sort.Should().BeNullOrEmpty();
+        Assert.True(query.Sort == null || query.Sort.Count == 0);
     }
 
     [Fact]
     public void Constructor_WithEmptySortString_ShouldNotCreateSorts()
     {
         // Act
-        var query = new PagedListQuery(null, null, null, string.Empty, null);
+        PagedListQuery query = new(null, null, null, string.Empty, null);
 
         // Assert
-        query.Sort.Should().BeNull();
+        Assert.Null(query.Sort);
     }
 
     #endregion
@@ -280,13 +276,13 @@ public class PagedListQueryTests
         const string graph = "{\"user\":null,\"items\":null}";
 
         // Act
-        var query = new PagedListQuery(null, null, null, null, graph);
+        PagedListQuery query = new(null, null, null, null, graph);
 
         // Assert
-        query.Graph.Should().NotBeNull();
-        query.Graph.Should().BeOfType<JObject>();
-        query.Graph!["user"].Should().NotBeNull();
-        query.Graph["items"].Should().NotBeNull();
+        Assert.NotNull(query.Graph);
+        Assert.IsType<JObject>(query.Graph);
+        Assert.NotNull(query.Graph["user"]);
+        Assert.NotNull(query.Graph["items"]);
     }
 
     [Fact]
@@ -296,12 +292,12 @@ public class PagedListQueryTests
         const string graph = "{\"user\":{\"profile\":null}}";
 
         // Act
-        var query = new PagedListQuery(null, null, null, null, graph);
+        PagedListQuery query = new(null, null, null, null, graph);
 
         // Assert
-        query.Graph.Should().NotBeNull();
-        query.Graph!["user"].Should().NotBeNull();
-        query.Graph["user"]!["profile"].Should().NotBeNull();
+        Assert.NotNull(query.Graph);
+        Assert.NotNull(query.Graph["user"]);
+        Assert.NotNull(query.Graph["user"]!["profile"]);
     }
 
     [Fact]
@@ -311,11 +307,11 @@ public class PagedListQueryTests
         const string graph = "{}";
 
         // Act
-        var query = new PagedListQuery(null, null, null, null, graph);
+        PagedListQuery query = new(null, null, null, null, graph);
 
         // Assert
-        query.Graph.Should().NotBeNull();
-        query.Graph.Should().BeEmpty();
+        Assert.NotNull(query.Graph);
+        Assert.Empty(query.Graph);
     }
 
     #endregion
@@ -328,33 +324,31 @@ public class PagedListQueryTests
         // Arrange
         const string graph = "{invalid json}";
 
-        // Act
-        Action act = () => new PagedListQuery(null, null, null, null, graph);
+        // Act - should not throw
+        PagedListQuery query = new(null, null, null, null, graph);
 
-        // Assert - should not throw, Graph should be null
-        act.Should().NotThrow();
-        var query = new PagedListQuery(null, null, null, null, graph);
-        query.Graph.Should().BeNull();
+        // Assert - Graph should be null
+        Assert.Null(query.Graph);
     }
 
     [Fact]
     public void Constructor_WithNullGraph_ShouldNotParseGraph()
     {
         // Act
-        var query = new PagedListQuery(null, null, null, null, null);
+        PagedListQuery query = new(null, null, null, null, null);
 
         // Assert
-        query.Graph.Should().BeNull();
+        Assert.Null(query.Graph);
     }
 
     [Fact]
     public void Constructor_WithEmptyStringGraph_ShouldNotParseGraph()
     {
         // Act
-        var query = new PagedListQuery(null, null, null, null, string.Empty);
+        PagedListQuery query = new(null, null, null, null, string.Empty);
 
         // Assert
-        query.Graph.Should().BeNull();
+        Assert.Null(query.Graph);
     }
 
     #endregion
@@ -372,23 +366,23 @@ public class PagedListQueryTests
         const string graph = "{\"profile\":null}";
 
         // Act
-        var query = new PagedListQuery(pageSize, pageNumber, filter, sort, graph);
+        PagedListQuery query = new(pageSize, pageNumber, filter, sort, graph);
 
         // Assert
-        query.PageSize.Should().Be(pageSize);
-        query.PageNumber.Should().Be(pageNumber);
+        Assert.Equal(pageSize, query.PageSize);
+        Assert.Equal(pageNumber, query.PageNumber);
 
-        query.Filter.Should().HaveCount(2);
-        query.Filter![0].Property.Should().Be("Name");
-        query.Filter[1].Property.Should().Be("Age");
+        Assert.Equal(2, query.Filter!.Count);
+        Assert.Equal("Name", query.Filter[0].Property);
+        Assert.Equal("Age", query.Filter[1].Property);
 
-        query.Sort.Should().HaveCount(2);
-        query.Sort![0].Property.Should().Be("Name");
-        query.Sort[0].Direction.Should().Be(PagedListQuerySortDirection.Asc);
-        query.Sort[1].Direction.Should().Be(PagedListQuerySortDirection.Desc);
+        Assert.Equal(2, query.Sort!.Count);
+        Assert.Equal("Name", query.Sort[0].Property);
+        Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
+        Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
 
-        query.Graph.Should().NotBeNull();
-        query.Graph!["profile"].Should().NotBeNull();
+        Assert.NotNull(query.Graph);
+        Assert.NotNull(query.Graph["profile"]);
     }
 
     [Fact]
@@ -398,10 +392,10 @@ public class PagedListQueryTests
         const string filter = "email~like~test%40example.com"; // @ is %40 in URL encoding
 
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter![0].Value.Should().Be("test@example.com");
+        Assert.Equal("test@example.com", query.Filter![0].Value);
     }
 
     #endregion
@@ -415,12 +409,12 @@ public class PagedListQueryTests
         const string filter = "name~=~John,invalid,age~>=~18";
 
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter.Should().HaveCount(2);
-        query.Filter![0].Property.Should().Be("Name");
-        query.Filter[1].Property.Should().Be("Age");
+        Assert.Equal(2, query.Filter!.Count);
+        Assert.Equal("Name", query.Filter[0].Property);
+        Assert.Equal("Age", query.Filter[1].Property);
     }
 
     [Fact]
@@ -430,12 +424,12 @@ public class PagedListQueryTests
         const string sort = "name~asc,invalid,age~desc";
 
         // Act
-        var query = new PagedListQuery(null, null, null, sort, null);
+        PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        query.Sort.Should().HaveCount(2);
-        query.Sort![0].Property.Should().Be("Name");
-        query.Sort[1].Property.Should().Be("Age");
+        Assert.Equal(2, query.Sort!.Count);
+        Assert.Equal("Name", query.Sort[0].Property);
+        Assert.Equal("Age", query.Sort[1].Property);
     }
 
     [Theory]
@@ -444,12 +438,13 @@ public class PagedListQueryTests
     public void Constructor_WithEmptyFilterValue_ShouldStillCreateFilter(string filter)
     {
         // Act
-        var query = new PagedListQuery(null, null, filter, null, null);
+        PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        query.Filter.Should().HaveCount(1);
-        query.Filter![0].Value.Should().NotBeNull();
+        PagedListQueryFilter filterItem = Assert.Single(query.Filter!);
+        Assert.NotNull(filterItem.Value);
     }
 
     #endregion
 }
+
