@@ -36,6 +36,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     public virtual async Task<TEntity> GetById(TId id)
     {
         TEntity entity = await Service.GetById(id);
+
         return entity;
     }
 
@@ -61,7 +62,9 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     )
     {
         PagedListQuery query = new(pageSize, pageNumber, filter, sort, graph);
-        return await Service.GetPaged(query);
+        PagedList<TEntity> pagedResult = await Service.GetPaged(query);
+
+        return pagedResult;
     }
 
     [HttpGet("{id}/graph")]

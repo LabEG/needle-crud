@@ -22,14 +22,13 @@ where TEntity : class, IEntity<TId>, new()
     public virtual async Task<TEntity> Create(TEntity entity)
     {
         TEntity resultEntity = await Repository.Create(entity);
-        await SaveContext();
+        await DBContext.SaveChangesAsync();
         return resultEntity;
     }
 
     public virtual async Task<TEntity> GetById(TId id)
     {
         TEntity resultEntity = await Repository.GetById(id);
-        await SaveContext();
         return resultEntity;
     }
 
@@ -41,22 +40,14 @@ where TEntity : class, IEntity<TId>, new()
 
     public virtual async Task Update(TId id, TEntity entity)
     {
-        try
-        {
-            await Repository.Update(id, entity);
-            await SaveContext();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        await Repository.Update(id, entity);
+        await DBContext.SaveChangesAsync();
     }
 
     public virtual async Task Delete(TId id)
     {
         await Repository.Delete(id);
-        await SaveContext();
+        await DBContext.SaveChangesAsync();
     }
 
     public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query)
@@ -69,8 +60,4 @@ where TEntity : class, IEntity<TId>, new()
         return await Repository.GetGraph(id, graph);
     }
 
-    protected virtual async Task SaveContext()
-    {
-        await DBContext.SaveChangesAsync();
-    }
 }
