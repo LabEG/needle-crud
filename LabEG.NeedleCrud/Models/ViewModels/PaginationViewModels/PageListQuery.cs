@@ -66,54 +66,54 @@ public class PagedListQuery
             PageNumber = pageNumberInt;
         }
 
-        if (filter is string filterString)
+        if (filter is string filterString && !string.IsNullOrEmpty(filterString))
         {
-            Filter ??= [];
-
-            if (!string.IsNullOrEmpty(filter))
+            string[] filterGroups = filterString.Split(',');
+            foreach (string filterItem in filterGroups)
             {
-                string[] filterGroups = filterString.Split(',');
-                foreach (string filterItem in filterGroups)
+                string[] filterSeparated = filterItem.Split('~');
+                if (filterSeparated.Length == 3)
                 {
-                    string[] filterSeparated = filterItem.Split('~');
-                    if (filterSeparated.Length == 3)
+                    Filter ??= [];
+                    Filter.Add(new PagedListQueryFilter()
                     {
-                        Filter.Add(new PagedListQueryFilter()
-                        {
-                            Property = filterSeparated[0].First().ToString().ToUpper() + string.Join("", filterSeparated[0].Skip(1)),
-                            Method = ParseFilterMethod(filterSeparated[1]),
-                            Value = HttpUtility.UrlDecode(filterSeparated[2])
-                        });
-                    }
+                        Property = filterSeparated[0].First().ToString().ToUpper() + string.Join("", filterSeparated[0].Skip(1)),
+                        Method = ParseFilterMethod(filterSeparated[1]),
+                        Value = HttpUtility.UrlDecode(filterSeparated[2])
+                    });
                 }
             }
         }
 
-        if (sort is string sortString)
+        if (sort is string sortString && !string.IsNullOrEmpty(sortString))
         {
-            Sort ??= [];
-
-            if (!string.IsNullOrEmpty(sort))
+            string[] sortGroups = sortString.Split(',');
+            foreach (string sortItem in sortGroups)
             {
-                string[] sortGroups = sortString.Split(',');
-                foreach (string sortItem in sortGroups)
+                string[] sortSeparated = sortItem.Split('~');
+                if (sortSeparated.Length == 2)
                 {
-                    string[] sortSeparated = sortItem.Split('~');
-                    if (sortSeparated.Length == 2)
+                    Sort ??= [];
+                    Sort.Add(new PagedListQuerySort()
                     {
-                        Sort.Add(new PagedListQuerySort()
-                        {
-                            Property = sortSeparated[0].First().ToString().ToUpper() + string.Join("", sortSeparated[0].Skip(1)),
-                            Direction = sortSeparated[1].ToLower() == "asc" ? PagedListQuerySortDirection.Asc : PagedListQuerySortDirection.Desc
-                        });
-                    }
+                        Property = sortSeparated[0].First().ToString().ToUpper() + string.Join("", sortSeparated[0].Skip(1)),
+                        Direction = sortSeparated[1].ToLower() == "asc" ? PagedListQuerySortDirection.Asc : PagedListQuerySortDirection.Desc
+                    });
                 }
             }
         }
 
-        if (graph is string graphString)
+        if (graph is string graphString && !string.IsNullOrEmpty(graphString))
         {
-            Graph = JsonConvert.DeserializeObject(graphString) as JObject;
+            try
+            {
+                Graph = JsonConvert.DeserializeObject(graphString) as JObject;
+            }
+            catch (JsonException)
+            {
+                // Invalid JSON is ignored
+                Graph = null;
+            }
         }
     }
 
