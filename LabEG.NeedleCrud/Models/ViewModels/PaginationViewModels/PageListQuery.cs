@@ -1,4 +1,3 @@
-using System.Web;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -14,23 +13,23 @@ public class PagedListQuery
     /// Gets or sets the number of items per page.
     /// Default value is 10.
     /// </summary>
-    public int PageSize { get; set; } = 10;
+    public int PageSize { get; init; } = 10;
 
     /// <summary>
     /// Gets or sets the page number to retrieve (1-based index).
     /// Default value is 1.
     /// </summary>
-    public int PageNumber { get; set; } = 1;
+    public int PageNumber { get; init; } = 1;
 
     /// <summary>
     /// Gets or sets the list of filter conditions to apply to the query.
     /// </summary>
-    public IList<PagedListQueryFilter>? Filter { get; set; } = null;
+    public PagedListQueryFilter[] Filter { get; init; } = [];
 
     /// <summary>
     /// Gets or sets the list of sort conditions to apply to the query.
     /// </summary>
-    public IList<PagedListQuerySort>? Sort { get; set; } = null;
+    public PagedListQuerySort[] Sort { get; init; } = [];
 
     /// <summary>
     /// Gets or sets the graph expression as a JSON object for loading related entities (eager loading).
@@ -56,85 +55,101 @@ public class PagedListQuery
         string? graph
     )
     {
-        if (pageSize is int pageSizeInt)
-        {
-            PageSize = pageSizeInt;
-        }
-
-        if (pageNumber is int pageNumberInt)
-        {
-            PageNumber = pageNumberInt;
-        }
-
-        if (filter is string filterString && !string.IsNullOrEmpty(filterString))
-        {
-            string[] filterGroups = filterString.Split(',');
-            foreach (string filterItem in filterGroups)
-            {
-                string[] filterSeparated = filterItem.Split('~');
-                if (filterSeparated.Length == 3)
-                {
-                    Filter ??= [];
-                    Filter.Add(new PagedListQueryFilter()
-                    {
-                        Property = filterSeparated[0].First().ToString().ToUpper() + string.Join("", filterSeparated[0].Skip(1)),
-                        Method = ParseFilterMethod(filterSeparated[1]),
-                        Value = HttpUtility.UrlDecode(filterSeparated[2])
-                    });
-                }
-            }
-        }
-
-        if (sort is string sortString && !string.IsNullOrEmpty(sortString))
-        {
-            string[] sortGroups = sortString.Split(',');
-            foreach (string sortItem in sortGroups)
-            {
-                string[] sortSeparated = sortItem.Split('~');
-                if (sortSeparated.Length == 2)
-                {
-                    Sort ??= [];
-                    Sort.Add(new PagedListQuerySort()
-                    {
-                        Property = sortSeparated[0].First().ToString().ToUpper() + string.Join("", sortSeparated[0].Skip(1)),
-                        Direction = sortSeparated[1].ToLower() == "asc" ? PagedListQuerySortDirection.Asc : PagedListQuerySortDirection.Desc
-                    });
-                }
-            }
-        }
-
-        if (graph is string graphString && !string.IsNullOrEmpty(graphString))
-        {
-            try
-            {
-                Graph = JsonConvert.DeserializeObject(graphString) as JObject;
-            }
-            catch (JsonException)
-            {
-                // Invalid JSON is ignored
-                Graph = null;
-            }
-        }
+        PageSize = pageSize ?? PageSize;
+        PageNumber = pageNumber ?? PageNumber;
+        Filter = ParseFilters(filter);
+        Sort = ParseSort(sort);
+        Graph = ParseGraph(graph);
     }
 
     /// <summary>
-    /// Parses a filter method string and converts it to the corresponding <see cref="PagedListQueryFilterMethod"/> enum value.
+    /// Parses a comma-separated string of filter expressions into an array of <see cref="PagedListQueryFilter"/>.
     /// </summary>
-    /// <param name="method">The filter method string. Supported values: "&lt;", "&lt;=", "&gt;=", "&gt;", "like", "ilike", "=".</param>
-    /// <returns>The corresponding <see cref="PagedListQueryFilterMethod"/> enum value.</returns>
-    /// <exception cref="BadHttpRequestException">Thrown when the <paramref name="method"/> is not recognized.</exception>
-    private static PagedListQueryFilterMethod ParseFilterMethod(string method)
+    /// <param name="filter">A comma-separated string of filter expressions in the format: property~method~value.</param>
+    /// <returns>An array of parsed filters, or an empty array if the input is null or empty.</returns>
+    private static PagedListQueryFilter[] ParseFilters(string? filter)
     {
-        return method switch
+        if (filter is not string filterString || string.IsNullOrEmpty(filterString))
         {
-            "<" => PagedListQueryFilterMethod.Less,
-            "<=" => PagedListQueryFilterMethod.LessOrEqual,
-            ">=" => PagedListQueryFilterMethod.GreatOrEqual,
-            ">" => PagedListQueryFilterMethod.Great,
-            "like" => PagedListQueryFilterMethod.Like,
-            "ilike" => PagedListQueryFilterMethod.ILike,
-            "=" => PagedListQueryFilterMethod.Equal,
-            _ => throw new BadHttpRequestException("Unknown filter method"),
-        };
+            return [];
+        }
+
+        ReadOnlySpan<char> filterSpan = filterString.AsSpan();
+        int estimatedCount = filterSpan.Count(',') + 1;
+
+        PagedListQueryFilter[] filters = new PagedListQueryFilter[estimatedCount];
+        int count = 0;
+
+        while (true)
+        {
+            int commaIndex = filterSpan.IndexOf(',');
+            if (commaIndex == -1)
+            {
+                filters[count++] = new PagedListQueryFilter(filterSpan);
+                break;
+            }
+
+            filters[count++] = new PagedListQueryFilter(filterSpan[..commaIndex]);
+            filterSpan = filterSpan[(commaIndex + 1)..];
+        }
+
+        return filters;
     }
+
+    /// <summary>
+    /// Parses a comma-separated string of sort expressions into an array of <see cref="PagedListQuerySort"/>.
+    /// </summary>
+    /// <param name="sort">A comma-separated string of sort expressions in the format: property~direction.</param>
+    /// <returns>An array of parsed sort conditions, or an empty array if the input is null or empty.</returns>
+    private static PagedListQuerySort[] ParseSort(string? sort)
+    {
+        if (sort is not string sortString || string.IsNullOrEmpty(sortString))
+        {
+            return [];
+        }
+
+        ReadOnlySpan<char> sortSpan = sortString.AsSpan();
+        int estimatedCount = sortSpan.Count(',') + 1;
+
+        PagedListQuerySort[] sorts = new PagedListQuerySort[estimatedCount];
+        int count = 0;
+
+        while (true)
+        {
+            int commaIndex = sortSpan.IndexOf(',');
+            if (commaIndex == -1)
+            {
+                sorts[count++] = new PagedListQuerySort(sortSpan);
+                break;
+            }
+
+            sorts[count++] = new PagedListQuerySort(sortSpan[..commaIndex]);
+            sortSpan = sortSpan[(commaIndex + 1)..];
+        }
+
+        return sorts;
+    }
+
+    /// <summary>
+    /// Parses a JSON string into a <see cref="JObject"/> for graph loading configuration.
+    /// </summary>
+    /// <param name="graph">A JSON string representing the graph of related entities to load.</param>
+    /// <returns>A parsed <see cref="JObject"/> if the input is valid JSON, otherwise null.</returns>
+    private static JObject? ParseGraph(string? graph)
+    {
+        if (graph is not string graphString || string.IsNullOrEmpty(graphString))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonConvert.DeserializeObject(graphString) as JObject;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
 }
