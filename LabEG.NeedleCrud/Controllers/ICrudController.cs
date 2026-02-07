@@ -1,5 +1,6 @@
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LabEG.NeedleCrud.Controllers;
 
@@ -18,7 +19,7 @@ public interface ICrudController<TEntity, TId>
     /// <param name="entity">The entity to create. Must not be null.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the created entity with its assigned identifier.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is null.</exception>
-    Task<TEntity> Create(TEntity entity);
+    Task<ActionResult<TEntity>> Create(TEntity entity);
 
     /// <summary>
     /// Deletes an entity from the data store by its identifier.
@@ -53,7 +54,7 @@ public interface ICrudController<TEntity, TId>
     /// <returns>A task that represents the asynchronous update operation.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is null.</exception>
     /// <exception cref="ObjectNotFoundException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
-    Task Update(TId id, TEntity entity);
+    Task<IActionResult> Update(TId id, TEntity entity);
 
     /// <summary>
     /// Retrieves a paginated, filtered, and sorted list of entities.

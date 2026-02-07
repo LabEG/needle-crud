@@ -68,7 +68,7 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Filter);
-        Assert.Equal(3, query.Filter.Count);
+        Assert.Equal(3, query.Filter.Length);
 
         Assert.Equal("Name", query.Filter[0].Property);
         Assert.Equal(PagedListQueryFilterMethod.Like, query.Filter[0].Method);
@@ -154,7 +154,7 @@ public class PagedListQueryTests
         PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        Assert.True(query.Filter == null || query.Filter.Count == 0);
+        Assert.True(query.Filter == null || query.Filter.Length == 0);
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Sort);
-        Assert.Equal(3, query.Sort.Count);
+        Assert.Equal(3, query.Sort.Length);
 
         Assert.Equal("Name", query.Sort[0].Property);
         Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
@@ -252,7 +252,7 @@ public class PagedListQueryTests
         PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        Assert.True(query.Sort == null || query.Sort.Count == 0);
+        Assert.True(query.Sort == null || query.Sort.Length == 0);
     }
 
     [Fact]
@@ -372,11 +372,11 @@ public class PagedListQueryTests
         Assert.Equal(pageSize, query.PageSize);
         Assert.Equal(pageNumber, query.PageNumber);
 
-        Assert.Equal(2, query.Filter!.Count);
+        Assert.Equal(2, query.Filter.Length);
         Assert.Equal("Name", query.Filter[0].Property);
         Assert.Equal("Age", query.Filter[1].Property);
 
-        Assert.Equal(2, query.Sort!.Count);
+        Assert.Equal(2, query.Sort.Length);
         Assert.Equal("Name", query.Sort[0].Property);
         Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
         Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
@@ -412,7 +412,7 @@ public class PagedListQueryTests
         PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        Assert.Equal(2, query.Filter!.Count);
+        Assert.Equal(2, query.Filter.Length);
         Assert.Equal("Name", query.Filter[0].Property);
         Assert.Equal("Age", query.Filter[1].Property);
     }
@@ -427,7 +427,7 @@ public class PagedListQueryTests
         PagedListQuery query = new(null, null, null, sort, null);
 
         // Assert
-        Assert.Equal(2, query.Sort!.Count);
+        Assert.Equal(2, query.Sort.Length);
         Assert.Equal("Name", query.Sort[0].Property);
         Assert.Equal("Age", query.Sort[1].Property);
     }

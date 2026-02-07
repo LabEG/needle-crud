@@ -33,7 +33,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         TEntity resultEntity = await DBContext
             .Set<TEntity>()
             .FirstOrDefaultAsync((entity) => entity.Id!.Equals(id)) ??
-                throw new ObjectNotFoundException($"{typeof(TEntity).Name} with ID '{id}' not found");
+                throw new ObjectNotFoundNeedleCrudException($"{typeof(TEntity).Name} with ID '{id}' not found");
 
         return resultEntity;
     }
@@ -48,7 +48,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         bool exists = await DBContext.Set<TEntity>().AnyAsync(e => e.Id!.Equals(id));
         if (!exists)
         {
-            throw new ObjectNotFoundException($"{typeof(TEntity).Name} with ID '{id}' not found");
+            throw new ObjectNotFoundNeedleCrudException($"{typeof(TEntity).Name} with ID '{id}' not found");
         }
 
         entity.Id = id;
@@ -113,7 +113,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         }
 
         TEntity? resultEntity = await graphQuery.FirstOrDefaultAsync((entity) => entity.Id!.Equals(id)) ??
-            throw new ObjectNotFoundException($"{typeof(TEntity).Name} with ID '{id}' not found");
+            throw new ObjectNotFoundNeedleCrudException($"{typeof(TEntity).Name} with ID '{id}' not found");
 
         return resultEntity;
     }

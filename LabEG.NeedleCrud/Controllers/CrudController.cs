@@ -21,11 +21,11 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     }
 
     [HttpPost]
-    public virtual async Task<TEntity> Create([FromBody] TEntity entity)
+    public virtual async Task<ActionResult<TEntity>> Create([FromBody] TEntity entity)
     {
         if (!ModelState.IsValid)
         {
-            throw new NeedleCrudException("Invalid model state");
+            return BadRequest(ModelState);
         }
 
         return await Service.Create(entity);
@@ -46,14 +46,15 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     }
 
     [HttpPut("{id}")]
-    public virtual async Task Update(TId id, [FromBody] TEntity entity)
+    public virtual async Task<IActionResult> Update(TId id, [FromBody] TEntity entity)
     {
         if (!ModelState.IsValid)
         {
-            throw new NeedleCrudException("Invalid model state");
+            return BadRequest(ModelState);
         }
 
         await Service.Update(id, entity);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
