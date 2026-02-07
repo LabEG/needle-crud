@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.Entities;
 
-namespace LabEG.NeedleCrud.Benchmarks.Fixtures.Entities;
+namespace LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 
 /// <summary>
 /// User review for a book

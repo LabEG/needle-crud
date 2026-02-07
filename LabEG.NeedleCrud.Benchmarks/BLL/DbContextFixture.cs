@@ -1,11 +1,31 @@
-using LabEG.NeedleCrud.Benchmarks.Fixtures.Entities;
+using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace LabEG.NeedleCrud.Benchmarks.Fixtures;
+namespace LabEG.NeedleCrud.Benchmarks.BLL;
+
+/// <summary>
+/// Database provider type
+/// </summary>
+public enum DatabaseProvider
+{
+    InMemory,
+    PostgreSQL
+}
 
 /// <summary>
 /// Database context for the library system
 /// </summary>
+/// <remarks>
+/// To run PostgreSQL container for testing:
+/// <code>
+/// docker run -d -it --rm --name needlecrud-postgres \
+///   -e POSTGRES_DB=needlecrud-test \
+///   -e POSTGRES_USER=needlecrud-test \
+///   -e POSTGRES_PASSWORD=needlecrud-test \
+///   -p 5432:5432 \
+///   postgres:latest
+/// </code>
+/// </remarks>
 public class LibraryDbContext : DbContext
 {
     public LibraryDbContext(DbContextOptions<LibraryDbContext> options) : base(options)
@@ -94,5 +114,64 @@ public class LibraryDbContext : DbContext
             entity.HasIndex(e => e.BookId);
             entity.HasIndex(e => new { e.BookId, e.UserId });
         });
+    }
+}
+
+/// <summary>
+/// Factory for creating LibraryDbContext instances
+/// </summary>
+public static class LibraryDbContextFactory
+{
+    private const string PostgreSqlConnectionString =
+        "Host=localhost;Database=needlecrud-test;Username=needlecrud-test;Password=needlecrud-test";
+
+    /// <summary>
+    /// Creates DbContext with specified database provider
+    /// </summary>
+    /// <param name="provider">Database provider type</param>
+    /// <param name="databaseName">Database name (used for InMemory provider)</param>
+    /// <returns>Configured LibraryDbContext instance</returns>
+    public static LibraryDbContext Create(DatabaseProvider provider, string databaseName = "TestDatabase")
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<LibraryDbContext>();
+
+        switch (provider)
+        {
+            case DatabaseProvider.InMemory:
+                optionsBuilder.UseInMemoryDatabase(databaseName);
+                break;
+            case DatabaseProvider.PostgreSQL:
+                optionsBuilder.UseNpgsql(PostgreSqlConnectionString);
+                break;
+            default:
+                throw new ArgumentException($"Unsupported database provider: {provider}", nameof(provider));
+        }
+
+        return new LibraryDbContext(optionsBuilder.Options);
+    }
+
+    /// <summary>
+    /// Creates DbContextOptions for specified database provider
+    /// </summary>
+    /// <param name="provider">Database provider type</param>
+    /// <param name="databaseName">Database name (used for InMemory provider)</param>
+    /// <returns>Configured DbContextOptions</returns>
+    public static DbContextOptions<LibraryDbContext> CreateOptions(DatabaseProvider provider, string databaseName = "TestDatabase")
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<LibraryDbContext>();
+
+        switch (provider)
+        {
+            case DatabaseProvider.InMemory:
+                optionsBuilder.UseInMemoryDatabase(databaseName);
+                break;
+            case DatabaseProvider.PostgreSQL:
+                optionsBuilder.UseNpgsql(PostgreSqlConnectionString);
+                break;
+            default:
+                throw new ArgumentException($"Unsupported database provider: {provider}", nameof(provider));
+        }
+
+        return optionsBuilder.Options;
     }
 }

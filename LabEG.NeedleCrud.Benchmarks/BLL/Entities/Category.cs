@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.Entities;
 
-namespace LabEG.NeedleCrud.Benchmarks.Fixtures.Entities;
+namespace LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 
 /// <summary>
 /// Book category
