@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 
-namespace LabEG.NeedleCrud.Benchmarks;
+namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
 
 /// <summary>
 /// Benchmarks for PagedListQuery parsing performance

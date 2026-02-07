@@ -33,16 +33,38 @@ public struct PagedListQueryFilter
     public PagedListQueryFilter(ReadOnlySpan<char> filterItem)
     {
         int firstTilde = filterItem.IndexOf('~');
+        if (firstTilde == -1)
+        {
+            throw new NeedleCrudException($"Invalid filter format. Missing delimiters. Expected 'property~method~value'. Filter: '{filterItem}'");
+        }
+
         int secondTilde = filterItem.Slice(firstTilde + 1).IndexOf('~');
+        if (secondTilde == -1)
+        {
+            throw new NeedleCrudException($"Invalid filter format. Expected 'property~method~value' with 2 delimiters. Filter: '{filterItem}'");
+        }
         secondTilde += firstTilde + 1;
 
         ReadOnlySpan<char> property = filterItem.Slice(0, firstTilde);
         ReadOnlySpan<char> method = filterItem.Slice(firstTilde + 1, secondTilde - firstTilde - 1);
         ReadOnlySpan<char> value = filterItem.Slice(secondTilde + 1);
 
-        Property = property.Length > 0
-            ? string.Concat(char.ToUpperInvariant(property[0]).ToString(), property.Slice(1).ToString())
-            : string.Empty;
+        if (property.IsEmpty)
+        {
+            throw new NeedleCrudException($"Invalid filter format. Property name is required. Filter: '{filterItem}'");
+        }
+
+        if (method.IsEmpty)
+        {
+            throw new NeedleCrudException($"Invalid filter format. Method is required. Filter: '{filterItem}'");
+        }
+
+        if (value.IsEmpty)
+        {
+            throw new NeedleCrudException($"Invalid filter format. Value is required. Filter: '{filterItem}'");
+        }
+
+        Property = string.Concat(char.ToUpperInvariant(property[0]).ToString(), property.Slice(1).ToString());
 
         Method = ParseFilterMethod(method.ToString());
         Value = HttpUtility.UrlDecode(value.ToString());

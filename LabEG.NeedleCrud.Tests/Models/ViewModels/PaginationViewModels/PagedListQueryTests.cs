@@ -1,5 +1,5 @@
+using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 
 namespace LabEG.NeedleCrud.Tests.Models.ViewModels.PaginationViewModels;
@@ -17,8 +17,8 @@ public class PagedListQueryTests
         // Assert
         Assert.Equal(10, query.PageSize);
         Assert.Equal(1, query.PageNumber);
-        Assert.Null(query.Filter);
-        Assert.Null(query.Sort);
+        Assert.Empty(query.Filter);
+        Assert.Empty(query.Sort);
         Assert.Null(query.Graph);
     }
 
@@ -134,27 +134,23 @@ public class PagedListQueryTests
     #region Filter Parsing - Negative Tests
 
     [Fact]
-    public void Constructor_WithUnknownFilterMethod_ShouldThrowBadHttpRequestException()
+    public void Constructor_WithUnknownFilterMethod_ShouldThrowNeedleCrudException()
     {
         // Arrange
         const string filter = "name~unknown~John";
 
         // Act & Assert
-        BadHttpRequestException exception = Assert.Throws<BadHttpRequestException>(() => new PagedListQuery(null, null, filter, null, null));
+        NeedleCrudException exception = Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, filter, null, null));
         Assert.Equal("Unknown filter method", exception.Message);
     }
 
     [Theory]
     [InlineData("name~=")]           // Missing value
     [InlineData("name")]              // Missing method and value
-    [InlineData("")]                  // Empty string
-    public void Constructor_WithInvalidFilterFormat_ShouldNotAddFilter(string filter)
+    public void Constructor_WithInvalidFilterFormat_ShouldThrowNeedleCrudException(string filter)
     {
-        // Act
-        PagedListQuery query = new(null, null, filter, null, null);
-
-        // Assert
-        Assert.True(query.Filter == null || query.Filter.Length == 0);
+        // Act & Assert
+        Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, filter, null, null));
     }
 
     [Fact]
@@ -164,7 +160,7 @@ public class PagedListQueryTests
         PagedListQuery query = new(null, null, string.Empty, null, null);
 
         // Assert
-        Assert.Null(query.Filter);
+        Assert.Empty(query.Filter);
     }
 
     #endregion
@@ -227,16 +223,13 @@ public class PagedListQueryTests
     }
 
     [Fact]
-    public void Constructor_WithInvalidSortDirection_ShouldDefaultToDesc()
+    public void Constructor_WithInvalidSortDirection_ShouldThrowNeedleCrudException()
     {
-        // Arrange - anything other than "asc" should default to desc
+        // Arrange - anything other than "asc" or "desc" should throw
         const string sort = "name~invalid";
 
-        // Act
-        PagedListQuery query = new(null, null, null, sort, null);
-
-        // Assert
-        Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort![0].Direction);
+        // Act & Assert
+        Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, null, sort, null));
     }
 
     #endregion
@@ -245,14 +238,10 @@ public class PagedListQueryTests
 
     [Theory]
     [InlineData("name")]              // Missing direction
-    [InlineData("")]                  // Empty string
-    public void Constructor_WithInvalidSortFormat_ShouldNotAddSort(string sort)
+    public void Constructor_WithInvalidSortFormat_ShouldThrowNeedleCrudException(string sort)
     {
-        // Act
-        PagedListQuery query = new(null, null, null, sort, null);
-
-        // Assert
-        Assert.True(query.Sort == null || query.Sort.Length == 0);
+        // Act & Assert
+        Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, null, sort, null));
     }
 
     [Fact]
@@ -262,7 +251,7 @@ public class PagedListQueryTests
         PagedListQuery query = new(null, null, null, string.Empty, null);
 
         // Assert
-        Assert.Null(query.Sort);
+        Assert.Empty(query.Sort);
     }
 
     #endregion
@@ -403,39 +392,36 @@ public class PagedListQueryTests
     #region Edge Cases
 
     [Fact]
-    public void Constructor_WithPartiallyInvalidFilters_ShouldParseValidOnesOnly()
+    public void Constructor_WithPartiallyInvalidFilters_ShouldThrowOnFirstInvalid()
     {
-        // Arrange
+        // Arrange - invalid filter in the middle should cause exception
         const string filter = "name~=~John,invalid,age~>=~18";
 
-        // Act
-        PagedListQuery query = new(null, null, filter, null, null);
-
-        // Assert
-        Assert.Equal(2, query.Filter.Length);
-        Assert.Equal("Name", query.Filter[0].Property);
-        Assert.Equal("Age", query.Filter[1].Property);
+        // Act & Assert
+        Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, filter, null, null));
     }
 
     [Fact]
-    public void Constructor_WithPartiallyInvalidSorts_ShouldParseValidOnesOnly()
+    public void Constructor_WithPartiallyInvalidSorts_ShouldThrowOnFirstInvalid()
     {
-        // Arrange
+        // Arrange - invalid sort in the middle should cause exception
         const string sort = "name~asc,invalid,age~desc";
 
-        // Act
-        PagedListQuery query = new(null, null, null, sort, null);
-
-        // Assert
-        Assert.Equal(2, query.Sort.Length);
-        Assert.Equal("Name", query.Sort[0].Property);
-        Assert.Equal("Age", query.Sort[1].Property);
+        // Act & Assert
+        Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, null, sort, null));
     }
 
     [Theory]
     [InlineData("name~=~")]           // Empty value
+    public void Constructor_WithEmptyFilterValue_ShouldThrowNeedleCrudException(string filter)
+    {
+        // Act & Assert - empty value is now invalid
+        Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, filter, null, null));
+    }
+
+    [Theory]
     [InlineData("name~=~   ")]        // Whitespace value
-    public void Constructor_WithEmptyFilterValue_ShouldStillCreateFilter(string filter)
+    public void Constructor_WithWhitespaceFilterValue_ShouldCreateFilter(string filter)
     {
         // Act
         PagedListQuery query = new(null, null, filter, null, null);

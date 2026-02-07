@@ -1,3 +1,5 @@
+using LabEG.NeedleCrud.Models.Exceptions;
+
 namespace LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 
 /// <summary>
@@ -20,22 +22,41 @@ public struct PagedListQuerySort
     /// Initializes a new instance of the <see cref="PagedListQuerySort"/> struct by parsing a sort expression.
     /// </summary>
     /// <param name="sortItem">A ReadOnlySpan representing a sort expression in the format: property~direction.</param>
+    /// <exception cref="NeedleCrudException">Thrown when the sort format is invalid.</exception>
     public PagedListQuerySort(ReadOnlySpan<char> sortItem)
     {
         int tildeIndex = sortItem.IndexOf('~');
+        if (tildeIndex == -1)
+        {
+            throw new NeedleCrudException($"Invalid sort format. Missing delimiter '~'. Expected 'property~direction'. Sort: '{sortItem}'");
+        }
 
         ReadOnlySpan<char> property = sortItem.Slice(0, tildeIndex);
         ReadOnlySpan<char> direction = sortItem.Slice(tildeIndex + 1);
 
-        Property = property.Length > 0
-            ? string.Concat(char.ToUpperInvariant(property[0]).ToString(), property.Slice(1).ToString())
-            : string.Empty;
+        if (property.IsEmpty)
+        {
+            throw new NeedleCrudException($"Invalid sort format. Property name is required. Sort: '{sortItem}'");
+        }
 
-        bool isAsc = direction.Length == 3 &&
-                    (direction[0] == 'a' || direction[0] == 'A') &&
-                    (direction[1] == 's' || direction[1] == 'S') &&
-                    (direction[2] == 'c' || direction[2] == 'C');
+        if (direction.IsEmpty)
+        {
+            throw new NeedleCrudException($"Invalid sort format. Direction (asc/desc) is required. Sort: '{sortItem}'");
+        }
 
-        Direction = isAsc ? PagedListQuerySortDirection.Asc : PagedListQuerySortDirection.Desc;
+        Property = string.Concat(char.ToUpperInvariant(property[0]).ToString(), property.Slice(1).ToString());
+
+        if (direction.Equals("asc", StringComparison.OrdinalIgnoreCase))
+        {
+            Direction = PagedListQuerySortDirection.Asc;
+        }
+        else if (direction.Equals("desc", StringComparison.OrdinalIgnoreCase))
+        {
+            Direction = PagedListQuerySortDirection.Desc;
+        }
+        else
+        {
+            throw new NeedleCrudException($"Invalid sort direction. Expected 'asc' or 'desc', but found '{direction}'. Sort: '{sortItem}'");
+        }
     }
 }
