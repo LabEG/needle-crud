@@ -1,7 +1,7 @@
 using LabEG.NeedleCrud.Models.Entities;
+using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -23,6 +23,11 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     [HttpPost]
     public virtual async Task<TEntity> Create([FromBody] TEntity entity)
     {
+        if (!ModelState.IsValid)
+        {
+            throw new NeedleCrudException("Invalid model state");
+        }
+
         return await Service.Create(entity);
     }
 
@@ -43,6 +48,11 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     [HttpPut("{id}")]
     public virtual async Task Update(TId id, [FromBody] TEntity entity)
     {
+        if (!ModelState.IsValid)
+        {
+            throw new NeedleCrudException("Invalid model state");
+        }
+
         await Service.Update(id, entity);
     }
 
@@ -72,11 +82,11 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     {
         if (string.IsNullOrEmpty(graph))
         {
-            throw new BadHttpRequestException("Parameter 'graph' cannot be null or empty");
+            throw new NeedleCrudException("Parameter 'graph' cannot be null or empty");
         }
 
         JObject graphObject = JsonConvert.DeserializeObject(graph) as JObject ??
-            throw new BadHttpRequestException("Invalid JSON in 'graph' parameter");
+            throw new NeedleCrudException("Invalid JSON in 'graph' parameter");
 
         TEntity graphResult = await Service.GetGraph(id, graphObject);
 

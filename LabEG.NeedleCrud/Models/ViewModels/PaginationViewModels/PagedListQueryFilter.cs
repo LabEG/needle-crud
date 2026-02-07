@@ -1,5 +1,5 @@
 using System.Web;
-using Microsoft.AspNetCore.Http;
+using LabEG.NeedleCrud.Models.Exceptions;
 
 namespace LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 
@@ -29,7 +29,7 @@ public struct PagedListQueryFilter
     /// Initializes a new instance of the <see cref="PagedListQueryFilter"/> struct by parsing a filter expression.
     /// </summary>
     /// <param name="filterItem">A ReadOnlySpan representing a filter expression in the format: property~method~value.</param>
-    /// <exception cref="BadHttpRequestException">Thrown when the method is unknown.</exception>
+    /// <exception cref="NeedleCrudException">Thrown when the method is unknown.</exception>
     public PagedListQueryFilter(ReadOnlySpan<char> filterItem)
     {
         int firstTilde = filterItem.IndexOf('~');
@@ -53,7 +53,7 @@ public struct PagedListQueryFilter
     /// </summary>
     /// <param name="method">The filter method string. Supported values: "&lt;", "&lt;=", "&gt;=", "&gt;", "like", "ilike", "=".</param>
     /// <returns>The corresponding <see cref="PagedListQueryFilterMethod"/> enum value.</returns>
-    /// <exception cref="BadHttpRequestException">Thrown when the <paramref name="method"/> is not recognized.</exception>
+    /// <exception cref="NeedleCrudException">Thrown when the <paramref name="method"/> is not recognized.</exception>
     private static PagedListQueryFilterMethod ParseFilterMethod(string method)
     {
         return method switch
@@ -65,7 +65,7 @@ public struct PagedListQueryFilter
             "like" => PagedListQueryFilterMethod.Like,
             "ilike" => PagedListQueryFilterMethod.ILike,
             "=" => PagedListQueryFilterMethod.Equal,
-            _ => throw new BadHttpRequestException("Unknown filter method"),
+            _ => throw new NeedleCrudException("Unknown filter method"),
         };
     }
 }

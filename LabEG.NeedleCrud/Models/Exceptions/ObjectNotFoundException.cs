@@ -1,18 +1,10 @@
 namespace LabEG.NeedleCrud.Models.Exceptions;
 
-public class ObjectNotFoundException : Exception
+/// <summary>
+/// Exception thrown when a requested object is not found in the database.
+/// In error handlers, this exception should be treated as an HTTP 404 Not Found error.
+/// </summary>
+public class ObjectNotFoundNeedleCrudException : NeedleCrudException
 {
-    public override string Message => base.Message is string ? base.Message : "Object Not Found";
-
-    public ObjectNotFoundException()
-    {
-    }
-
-    public ObjectNotFoundException(string message) : base(message)
-    {
-    }
-
-    public ObjectNotFoundException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
+    public override string Message => base.Message is not null ? base.Message : "Object Not Found";
 }
