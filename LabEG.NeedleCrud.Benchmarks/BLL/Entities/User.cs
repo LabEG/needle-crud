@@ -5,9 +5,9 @@ namespace LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 /// <summary>
 /// Library user
 /// </summary>
-public class User : IEntity<int>
+public class User : IEntity<Guid>
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public string FirstName { get; set; } = string.Empty;
 

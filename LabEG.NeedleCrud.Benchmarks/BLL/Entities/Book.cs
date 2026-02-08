@@ -5,17 +5,17 @@ namespace LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 /// <summary>
 /// Book in the library
 /// </summary>
-public class Book : IEntity<int>
+public class Book : IEntity<Guid>
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public string Title { get; set; } = string.Empty;
 
     public string ISBN { get; set; } = string.Empty;
 
-    public int AuthorId { get; set; }
+    public Guid AuthorId { get; set; }
 
-    public int CategoryId { get; set; }
+    public Guid CategoryId { get; set; }
 
     public DateTime PublicationDate { get; set; }
 

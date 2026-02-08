@@ -18,7 +18,7 @@ public enum DatabaseProvider
 /// <remarks>
 /// To run PostgreSQL container for testing:
 /// <code>
-/// docker run -d -it --rm --name needlecrud-postgres \
+/// docker run -d --name needlecrud-postgres \
 ///   -e POSTGRES_DB=needlecrud-test \
 ///   -e POSTGRES_USER=needlecrud-test \
 ///   -e POSTGRES_PASSWORD=needlecrud-test \

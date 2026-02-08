@@ -5,13 +5,13 @@ namespace LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 /// <summary>
 /// Book loan to user
 /// </summary>
-public class Loan : IEntity<int>
+public class Loan : IEntity<Guid>
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 
-    public int BookId { get; set; }
+    public Guid BookId { get; set; }
 
     public DateTime LoanDate { get; set; }
 

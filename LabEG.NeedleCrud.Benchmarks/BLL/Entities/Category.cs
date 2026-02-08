@@ -5,9 +5,9 @@ namespace LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 /// <summary>
 /// Book category
 /// </summary>
-public class Category : IEntity<int>
+public class Category : IEntity<Guid>
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public string Name { get; set; } = string.Empty;
 
