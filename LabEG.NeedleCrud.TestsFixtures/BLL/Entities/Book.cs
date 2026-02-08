@@ -26,4 +26,13 @@ public class Book : IEntity<Guid>
     public string Language { get; set; } = string.Empty;
 
     public bool IsAvailable { get; set; }
+
+    // Navigation properties
+    public Author Author { get; set; } = null!;
+
+    public Category Category { get; set; } = null!;
+
+    public ICollection<Loan> Loans { get; set; } = [];
+
+    public ICollection<Review> Reviews { get; set; } = [];
 }

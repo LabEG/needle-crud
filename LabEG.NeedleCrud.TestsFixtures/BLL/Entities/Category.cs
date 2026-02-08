@@ -16,4 +16,7 @@ public class Category : IEntity<Guid>
     public int DisplayOrder { get; set; }
 
     public bool IsActive { get; set; }
+
+    // Navigation properties
+    public ICollection<Book> Books { get; set; } = [];
 }

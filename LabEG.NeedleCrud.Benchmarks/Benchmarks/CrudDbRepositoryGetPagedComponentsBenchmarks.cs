@@ -173,35 +173,35 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public void AddFilter_NoFilters()
     {
-        var result = _repository.PublicAddFilter(_queryableData, _simpleQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _simpleQuery.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_SimpleWithFilter()
     {
-        var result = _repository.PublicAddFilter(_queryableData, _simpleWithFilterQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _simpleWithFilterQuery.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_ComplexFilter()
     {
-        var result = _repository.PublicAddFilter(_queryableData, _complexFilterQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _complexFilterQuery.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_ComplexFull()
     {
-        var result = _repository.PublicAddFilter(_queryableData, _complexFullQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _complexFullQuery.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_ComplexGraph()
     {
-        var result = _repository.PublicAddFilter(_queryableData, _complexGraphQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _complexGraphQuery.Filter);
         _consumer.Consume(result.Expression);
     }
 
@@ -212,35 +212,35 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public void AddSort_NoSort()
     {
-        var result = _repository.PublicAddSort(_queryableData, _simpleQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _simpleQuery.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_SimpleWithSort()
     {
-        var result = _repository.PublicAddSort(_queryableData, _simpleWithSortQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _simpleWithSortQuery.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_ComplexSort()
     {
-        var result = _repository.PublicAddSort(_queryableData, _complexSortQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _complexSortQuery.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_ComplexFull()
     {
-        var result = _repository.PublicAddSort(_queryableData, _complexFullQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _complexFullQuery.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_ComplexGraph()
     {
-        var result = _repository.PublicAddSort(_queryableData, _complexGraphQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _complexGraphQuery.Sort);
         _consumer.Consume(result.Expression);
     }
 
@@ -267,14 +267,14 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public Expression? GetMemberExpression_Simple()
     {
-        var param = Expression.Parameter(typeof(Book), "Book");
+        ParameterExpression param = Expression.Parameter(typeof(Book), "Book");
         return _repository.PublicGetMemberExpression("Title", param, typeof(Book));
     }
 
     [Benchmark]
     public Expression? GetMemberExpression_Nested()
     {
-        var param = Expression.Parameter(typeof(Book), "Book");
+        ParameterExpression param = Expression.Parameter(typeof(Book), "Book");
         return _repository.PublicGetMemberExpression("Author.FirstName", param, typeof(Book));
     }
 
@@ -335,44 +335,44 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public async Task<int> Combined_SimpleWithFilter_FilterAndCount()
     {
-        var filtered = _repository.PublicAddFilter(_queryableData, _simpleWithFilterQuery.Filter);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _simpleWithFilterQuery.Filter);
         return await filtered.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_SimpleWithSort_SortAndCount()
     {
-        var sorted = _repository.PublicAddSort(_queryableData, _simpleWithSortQuery.Sort);
+        IQueryable<Book> sorted = _repository.PublicAddSort(_queryableData, _simpleWithSortQuery.Sort);
         return await sorted.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexFilter_FilterAndCount()
     {
-        var filtered = _repository.PublicAddFilter(_queryableData, _complexFilterQuery.Filter);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _complexFilterQuery.Filter);
         return await filtered.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexSort_SortAndCount()
     {
-        var sorted = _repository.PublicAddSort(_queryableData, _complexSortQuery.Sort);
+        IQueryable<Book> sorted = _repository.PublicAddSort(_queryableData, _complexSortQuery.Sort);
         return await sorted.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexFull_FilterSortAndCount()
     {
-        var filtered = _repository.PublicAddFilter(_queryableData, _complexFullQuery.Filter);
-        var sorted = _repository.PublicAddSort(filtered, _complexFullQuery.Sort);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _complexFullQuery.Filter);
+        IQueryable<Book> sorted = _repository.PublicAddSort(filtered, _complexFullQuery.Sort);
         return await sorted.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexGraph_FilterSortAndCount()
     {
-        var filtered = _repository.PublicAddFilter(_queryableData, _complexGraphQuery.Filter);
-        var sorted = _repository.PublicAddSort(filtered, _complexGraphQuery.Sort);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _complexGraphQuery.Filter);
+        IQueryable<Book> sorted = _repository.PublicAddSort(filtered, _complexGraphQuery.Sort);
         return await sorted.CountAsync();
     }
 

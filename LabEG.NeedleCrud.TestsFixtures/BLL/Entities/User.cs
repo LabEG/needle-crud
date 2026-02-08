@@ -22,4 +22,9 @@ public class User : IEntity<Guid>
     public bool IsActive { get; set; }
 
     public string Address { get; set; } = string.Empty;
+
+    // Navigation properties
+    public ICollection<Loan> Loans { get; set; } = [];
+
+    public ICollection<Review> Reviews { get; set; } = [];
 }

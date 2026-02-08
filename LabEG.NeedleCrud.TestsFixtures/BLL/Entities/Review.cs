@@ -20,4 +20,9 @@ public class Review : IEntity<Guid>
     public DateTime ReviewDate { get; set; }
 
     public bool IsVerified { get; set; }
+
+    // Navigation properties
+    public User User { get; set; } = null!;
+
+    public Book Book { get; set; } = null!;
 }

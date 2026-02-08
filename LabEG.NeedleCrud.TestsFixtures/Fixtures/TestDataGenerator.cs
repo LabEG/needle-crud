@@ -25,12 +25,12 @@ public static class TestDataGenerator
     {
         Randomizer.Seed = new Random(seed);
 
-        var users = GenerateUsers();
-        var authors = GenerateAuthors();
-        var categories = GenerateCategories();
-        var books = GenerateBooks(authors, categories);
-        var loans = GenerateLoans(users, books);
-        var reviews = GenerateReviews(users, books);
+        List<User> users = GenerateUsers();
+        List<Author> authors = GenerateAuthors();
+        List<Category> categories = GenerateCategories();
+        List<Book> books = GenerateBooks(authors, categories);
+        List<Loan> loans = GenerateLoans(users, books);
+        List<Review> reviews = GenerateReviews(users, books);
 
         return new TestDataSet
         {
@@ -50,7 +50,7 @@ public static class TestDataGenerator
     /// <param name="seed">Random seed for reproducible data generation</param>
     public static void SeedDatabase(LibraryDbContext context, int seed = 12345)
     {
-        var data = Generate(seed);
+        TestDataSet data = Generate(seed);
 
         context.Users.AddRange(data.Users);
         context.Authors.AddRange(data.Authors);
@@ -64,7 +64,7 @@ public static class TestDataGenerator
 
     private static List<User> GenerateUsers()
     {
-        var faker = new Faker<User>()
+        Faker<User> faker = new Faker<User>()
             .RuleFor(u => u.Id, f => f.Random.Guid())
             .RuleFor(u => u.FirstName, f => f.Name.FirstName())
             .RuleFor(u => u.LastName, f => f.Name.LastName())
@@ -79,7 +79,7 @@ public static class TestDataGenerator
 
     private static List<Author> GenerateAuthors()
     {
-        var faker = new Faker<Author>()
+        Faker<Author> faker = new Faker<Author>()
             .RuleFor(a => a.Id, f => f.Random.Guid())
             .RuleFor(a => a.FirstName, f => f.Name.FirstName())
             .RuleFor(a => a.LastName, f => f.Name.LastName())
@@ -98,7 +98,7 @@ public static class TestDataGenerator
             "Romance", "Biography", "History", "Technology"
         };
 
-        var faker = new Faker<Category>()
+        Faker<Category> faker = new Faker<Category>()
             .RuleFor(c => c.Id, f => f.Random.Guid())
             .RuleFor(c => c.Name, f => categoryNames[f.IndexFaker % categoryNames.Length])
             .RuleFor(c => c.Description, f => f.Lorem.Sentence(10))
@@ -110,7 +110,7 @@ public static class TestDataGenerator
 
     private static List<Book> GenerateBooks(List<Author> authors, List<Category> categories)
     {
-        var faker = new Faker<Book>()
+        Faker<Book> faker = new Faker<Book>()
             .RuleFor(b => b.Id, f => f.Random.Guid())
             .RuleFor(b => b.Title, f => f.Lorem.Sentence(3, 5))
             .RuleFor(b => b.ISBN, f => f.Commerce.Ean13().Substring(0, Math.Min(13, 20)))
@@ -127,21 +127,23 @@ public static class TestDataGenerator
 
     private static List<Loan> GenerateLoans(List<User> users, List<Book> books)
     {
-        var faker = new Faker<Loan>()
+        Faker<Loan> faker = new Faker<Loan>()
             .RuleFor(l => l.Id, f => f.Random.Guid())
             .RuleFor(l => l.UserId, f => f.PickRandom(users).Id)
             .RuleFor(l => l.BookId, f => f.PickRandom(books).Id)
             .RuleFor(l => l.LoanDate, f => DateTime.SpecifyKind(f.Date.Past(1), DateTimeKind.Utc))
             .RuleFor(l => l.DueDate, (f, l) => l.LoanDate.AddDays(14))
             .RuleFor(l => l.IsReturned, f => f.Random.Bool(0.6f))
-            .RuleFor(l => l.ReturnDate, (f, l) => l.IsReturned ? l.LoanDate.AddDays(f.Random.Int(1, 20)) : (DateTime?)null)
+            .RuleFor(l => l.ReturnDate, (f, l) => l.IsReturned ? l.LoanDate.AddDays(f.Random.Int(1, 20)) : null)
             .RuleFor(l => l.LateFee, (f, l) =>
             {
                 if (!l.IsReturned || l.ReturnDate == null)
+                {
                     return null;
+                }
 
                 var daysLate = (l.ReturnDate.Value - l.DueDate).Days;
-                return daysLate > 0 ? (decimal?)(daysLate * 0.50m) : null;
+                return daysLate > 0 ? daysLate * 0.50m : null;
             })
             .RuleFor(l => l.Notes, f => f.Random.Bool(0.3f) ? f.Lorem.Sentence() : string.Empty);
 
@@ -150,7 +152,7 @@ public static class TestDataGenerator
 
     private static List<Review> GenerateReviews(List<User> users, List<Book> books)
     {
-        var faker = new Faker<Review>()
+        Faker<Review> faker = new Faker<Review>()
             .RuleFor(r => r.Id, f => f.Random.Guid())
             .RuleFor(r => r.UserId, f => f.PickRandom(users).Id)
             .RuleFor(r => r.BookId, f => f.PickRandom(books).Id)
@@ -168,10 +170,10 @@ public static class TestDataGenerator
 /// </summary>
 public class TestDataSet
 {
-    public List<User> Users { get; set; } = new();
-    public List<Author> Authors { get; set; } = new();
-    public List<Category> Categories { get; set; } = new();
-    public List<Book> Books { get; set; } = new();
-    public List<Loan> Loans { get; set; } = new();
-    public List<Review> Reviews { get; set; } = new();
+    public List<User> Users { get; set; } = [];
+    public List<Author> Authors { get; set; } = [];
+    public List<Category> Categories { get; set; } = [];
+    public List<Book> Books { get; set; } = [];
+    public List<Loan> Loans { get; set; } = [];
+    public List<Review> Reviews { get; set; } = [];
 }

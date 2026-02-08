@@ -13,7 +13,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     where TDbContext : DbContext
     where TEntity : class, IEntity<TId>, new()
 {
-    private static readonly Dictionary<Type, TypeConverter> _converterCache = new();
+    private static readonly Dictionary<Type, TypeConverter> _converterCache = [];
 
     protected TDbContext DBContext { get; }
 

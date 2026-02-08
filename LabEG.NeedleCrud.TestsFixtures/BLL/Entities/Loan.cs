@@ -24,4 +24,9 @@ public class Loan : IEntity<Guid>
     public decimal? LateFee { get; set; }
 
     public string Notes { get; set; } = string.Empty;
+
+    // Navigation properties
+    public User User { get; set; } = null!;
+
+    public Book Book { get; set; } = null!;
 }

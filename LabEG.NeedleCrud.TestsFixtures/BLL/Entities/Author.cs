@@ -18,4 +18,7 @@ public class Author : IEntity<Guid>
     public string Country { get; set; } = string.Empty;
 
     public string Biography { get; set; } = string.Empty;
+
+    // Navigation properties
+    public ICollection<Book> Books { get; set; } = [];
 }

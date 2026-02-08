@@ -48,6 +48,7 @@ public class CrudDbRepositoryGetPagedBenchmarks
 
         // Create database context and schema once
         _context = LibraryDbContextFactory.Create(Provider, _databaseName);
+        _context.Database.EnsureDeleted(); // Delete first to avoid duplicates
         _context.Database.EnsureCreated();
 
         // Seed database with test data

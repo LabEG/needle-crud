@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="LabEG.NeedleCrud.Benchmarks/LabEG.NeedleCrud.Benchmarks.csproj" />
   <Project Path="LabEG.NeedleCrud.Tests/LabEG.NeedleCrud.Tests.csproj" />
+  <Project Path="LabEG.NeedleCrud.TestsFixtures/LabEG.NeedleCrud.TestsFixtures.csproj" />
   <Project Path="LabEG.NeedleCrud/LabEG.NeedleCrud.csproj" />
 </Solution>
