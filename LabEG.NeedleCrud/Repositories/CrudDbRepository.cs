@@ -13,6 +13,8 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     where TDbContext : DbContext
     where TEntity : class, IEntity<TId>, new()
 {
+    private static readonly Dictionary<Type, TypeConverter> _converterCache = new();
+
     protected TDbContext DBContext { get; }
 
     public CrudDbRepository(TDbContext dbContext)
@@ -214,20 +216,28 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return queryableData;
     }
 
-    protected IList<string> ExtractIncludes(JObject graph, IList<string>? listOfProps = null, string? previosProp = null)
+    protected IList<string> ExtractIncludes(JObject graph, List<string>? listOfProps = null, string? previosProp = null)
     {
-        listOfProps ??= [];
+        // Pre-allocate capacity to avoid multiple resizes (estimate: graph.Count * 2 for nested depth)
+#pragma warning disable IDE0028 // Simplify collection initialization
+        listOfProps ??= new List<string>(capacity: graph.Count * 2);
+#pragma warning restore IDE0028 // Simplify collection initialization
 
         foreach (KeyValuePair<string, JToken?> prop in graph)
         {
-            if (prop.Value?.ToObject<object>() is object)
+            // Cache ToObject result to avoid calling it twice (expensive operation)
+            object? propValue = prop.Value?.ToObject<object>();
+            string camelKey = ToCamelCase(prop.Key);
+
+            if (propValue is object && prop.Value is not null)
             {
-                string deepProp = previosProp == null ? ToCamelCase(prop.Key) : (previosProp + "." + ToCamelCase(prop.Key));
+                // Use string interpolation - faster than concatenation for 2-3 parts
+                string deepProp = previosProp is not null ? $"{previosProp}.{camelKey}" : camelKey;
                 ExtractIncludes((JObject)prop.Value, listOfProps, deepProp);
             }
-            else if (prop.Value?.ToObject<object>() == null)
+            else if (propValue is null)
             {
-                listOfProps.Add((previosProp is string ? previosProp + "." : "") + ToCamelCase(prop.Key));
+                listOfProps.Add(previosProp is not null ? $"{previosProp}.{camelKey}" : camelKey);
             } // else ignore
         }
 
@@ -263,11 +273,50 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
     protected string ToCamelCase(string value)
     {
-        return value.First().ToString().ToUpper() + string.Join("", value.Skip(1));
+        // Single allocation using string.Create instead of char + Substring (2 allocations)
+        return string.Create(value.Length, value, static (chars, state) =>
+        {
+            state.AsSpan().CopyTo(chars);
+            chars[0] = char.ToUpper(chars[0]);
+        });
     }
 
-    protected object? ToType(string value, Type type)
+    protected object ToType(string value, Type type)
     {
-        return TypeDescriptor.GetConverter(type).ConvertFromInvariantString(value);
+        // Direct type checks in order of frequency for optimal performance
+        // Most common types first to minimize average checks
+#pragma warning disable IDE0011 // Add braces
+        if (type == typeof(string)) return value;
+        if (type == typeof(int)) return int.Parse(value);
+        if (type == typeof(DateTime)) return DateTime.Parse(value);
+        if (type == typeof(bool)) return bool.Parse(value);
+        if (type == typeof(long)) return long.Parse(value);
+        if (type == typeof(decimal)) return decimal.Parse(value);
+        if (type == typeof(Guid)) return Guid.Parse(value);
+        if (type == typeof(double)) return double.Parse(value);
+        if (type == typeof(short)) return short.Parse(value);
+        if (type == typeof(byte)) return byte.Parse(value);
+        if (type == typeof(float)) return float.Parse(value);
+        if (type == typeof(DateTimeOffset)) return DateTimeOffset.Parse(value);
+        if (type == typeof(TimeSpan)) return TimeSpan.Parse(value);
+        if (type == typeof(char)) return char.Parse(value);
+        if (type == typeof(uint)) return uint.Parse(value);
+        if (type == typeof(ulong)) return ulong.Parse(value);
+        if (type == typeof(ushort)) return ushort.Parse(value);
+        if (type == typeof(sbyte)) return sbyte.Parse(value);
+#pragma warning restore IDE0011 // Add braces
+
+        // For other types use cached converter
+        if (!_converterCache.TryGetValue(type, out TypeConverter? converter))
+        {
+            converter = TypeDescriptor.GetConverter(type);
+            lock (_converterCache)
+            {
+                _converterCache[type] = converter;
+            }
+        }
+
+        return converter.ConvertFromInvariantString(value) ??
+            throw new InvalidOperationException($"Failed to convert value '{value}' to type '{type.Name}'");
     }
 }
