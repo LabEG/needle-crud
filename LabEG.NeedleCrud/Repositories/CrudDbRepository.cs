@@ -40,9 +40,9 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return resultEntity;
     }
 
-    public virtual async Task<IList<TEntity>> GetAll()
+    public virtual async Task<TEntity[]> GetAll()
     {
-        return await DBContext.Set<TEntity>().ToListAsync();
+        return await DBContext.Set<TEntity>().ToArrayAsync();
     }
 
     public virtual async Task Update(TId id, TEntity entity)

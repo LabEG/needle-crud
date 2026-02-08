@@ -32,10 +32,9 @@ where TEntity : class, IEntity<TId>, new()
         return resultEntity;
     }
 
-    public virtual async Task<IList<TEntity>> GetAll()
+    public virtual async Task<TEntity[]> GetAll()
     {
-        IList<TEntity> resultEntities = await Repository.GetAll();
-        return resultEntities;
+        return await Repository.GetAll();
     }
 
     public virtual async Task Update(TId id, TEntity entity)

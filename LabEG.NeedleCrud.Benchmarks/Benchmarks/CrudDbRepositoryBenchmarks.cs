@@ -127,7 +127,7 @@ public class CrudDbRepositoryCrudMethodsBenchmarks
     }
 
     [Benchmark]
-    public async Task<IList<Book>> GetAll()
+    public async Task<Book[]> GetAll()
     {
         return await _repository.GetAll();
     }

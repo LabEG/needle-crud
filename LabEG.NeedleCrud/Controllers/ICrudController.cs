@@ -35,7 +35,7 @@ public interface ICrudController<TEntity, TId>
     /// <remarks>
     /// Warning: This method may return a large dataset. Consider using <see cref="GetPaged"/> for better performance with large collections.
     /// </remarks>
-    Task<IList<TEntity>> GetAll();
+    Task<TEntity[]> GetAll();
 
     /// <summary>
     /// Retrieves a single entity by its identifier.

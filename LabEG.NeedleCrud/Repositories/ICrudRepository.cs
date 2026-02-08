@@ -32,11 +32,11 @@ public interface ICrudRepository<TEntity, TId>
     /// <summary>
     /// Retrieves all entities from the data store.
     /// </summary>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a list of all entities.</returns>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an array of all entities.</returns>
     /// <remarks>
     /// Warning: This method may return a large dataset. Consider using <see cref="GetPaged"/> for better performance with large collections.
     /// </remarks>
-    Task<IList<TEntity>> GetAll();
+    Task<TEntity[]> GetAll();
 
     /// <summary>
     /// Retrieves a single entity by its identifier.

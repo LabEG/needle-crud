@@ -27,7 +27,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     }
 
     [HttpGet]
-    public virtual async Task<IList<TEntity>> GetAll()
+    public virtual async Task<TEntity[]> GetAll()
     {
         return await Service.GetAll();
     }
