@@ -15,6 +15,8 @@ dotnet run -c Release
 ```bash
 dotnet run -c Release -- --filter *PagedListQuery*
 dotnet run -c Release -- --filter *CrudDbRepository*
+dotnet run -c Release -- --filter *GetPaged*
+dotnet run -c Release -- --filter *GetPagedComponents*
 ```
 
 ### Запуск CrudDbRepository бенчмарков
@@ -95,6 +97,74 @@ docker run -d -it --rm --name needlecrud-postgres \
   -p 5432:5432 \
   postgres:latest
 ```
+
+### GetPagedBenchmarks
+
+Измеряет производительность метода GetPaged на реальной базе данных с различными типами запросов:
+
+- `GetPaged_Simple` - простая пагинация без фильтров и сортировки
+- `GetPaged_SimpleWithFilter` - пагинация с одним фильтром
+- `GetPaged_SimpleWithSort` - пагинация с одной сортировкой
+- `GetPaged_ComplexFilter` - пагинация с множественными фильтрами
+- `GetPaged_ComplexSort` - пагинация с множественной сортировкой
+- `GetPaged_ComplexFull` - комплексный запрос с фильтрами, сортировкой и пагинацией
+- `GetPaged_SimpleGraph` - пагинация с загрузкой связанных сущностей (Include)
+- `GetPaged_ComplexGraph` - пагинация с множественными Includes
+
+**Параметры:**
+- `Provider`: InMemory, PostgreSQL
+
+**Особенности:**
+- Тестирует полный цикл работы метода GetPaged от начала до конца
+- Использует реальные данные (100 книг, 20 авторов, 10 пользователей)
+- Измеряет производительность на простых и сложных запросах
+- Позволяет сравнить скорость работы InMemory и PostgreSQL
+
+### GetPagedComponentsBenchmarks
+
+Измеряет производительность отдельных компонентов метода GetPaged:
+
+**AddFilter:**
+- `AddFilter_Simple` - один фильтр
+- `AddFilter_Complex` - множественные фильтры с разными операторами
+- `AddFilter_NoFilters` - базовая линия без фильтров
+
+**AddSort:**
+- `AddSort_Simple` - одна сортировка
+- `AddSort_Complex` - множественная сортировка по нескольким полям
+- `AddSort_NoSort` - базовая линия без сортировки
+
+**ExtractIncludes:**
+- `ExtractIncludes_Simple` - извлечение одного Include из graph
+- `ExtractIncludes_Complex` - извлечение множественных Includes
+
+**GetMemberExpression:**
+- `GetMemberExpression_Simple` - простое свойство
+- `GetMemberExpression_Nested` - вложенное свойство (navigation property)
+
+**ToCamelCase:**
+- `ToCamelCase_Short` - короткая строка
+- `ToCamelCase_Long` - длинная строка
+
+**ToType:**
+- `ToType_Int` - конвертация в int
+- `ToType_Bool` - конвертация в bool
+- `ToType_DateTime` - конвертация в DateTime
+- `ToType_String` - конвертация в string
+
+**Combined Operations:**
+- `Combined_FilterAndCount` - фильтрация + подсчет
+- `Combined_SortAndCount` - сортировка + подсчет
+- `Combined_FilterSortAndCount` - фильтрация + сортировка + подсчет
+
+**Параметры:**
+- `Provider`: InMemory, PostgreSQL
+
+**Особенности:**
+- Измеряет производительность каждого компонента отдельно
+- Помогает найти узкие места в логике обработки запросов
+- Использует реальные данные для точных измерений
+- Позволяет оптимизировать отдельные методы независимо
 
 ### PagedListQueryBenchmarks
 

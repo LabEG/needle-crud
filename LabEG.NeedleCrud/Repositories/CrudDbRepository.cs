@@ -118,137 +118,97 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return resultEntity;
     }
 
-    protected IQueryable<TEntity> AddFilter(IQueryable<TEntity> queryableData, IList<PagedListQueryFilter>? filters)
+    protected IQueryable<TEntity> AddFilter(IQueryable<TEntity> queryableData, PagedListQueryFilter[] filters)
     {
-        if (filters is not null)
+        for (int i = 0; i < filters.Length; i++)
         {
-            foreach (PagedListQueryFilter filter in filters)
+            ref readonly PagedListQueryFilter filter = ref filters[i];
+
+            ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
+            Expression? memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
+
+            if (memberExpression is null)
             {
-                if (!string.IsNullOrEmpty(filter.Property))
-                {
-                    ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-                    Expression? memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
-                    if (memberExpression is not null)
-                    {
-                        Expression? body = null;
-
-                        if (filter.Method == PagedListQueryFilterMethod.Less)
-                        {
-                            body = Expression.LessThan(
-                                memberExpression,
-                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
-                            );
-                        }
-
-                        if (filter.Method == PagedListQueryFilterMethod.LessOrEqual)
-                        {
-                            body = Expression.LessThanOrEqual(
-                                memberExpression,
-                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
-                            );
-                        }
-
-                        if (filter.Method == PagedListQueryFilterMethod.Equal)
-                        {
-                            body = Expression.Equal(
-                                memberExpression,
-                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
-                            );
-                        }
-
-                        if (filter.Method == PagedListQueryFilterMethod.GreatOrEqual)
-                        {
-                            body = Expression.GreaterThanOrEqual(
-                                memberExpression,
-                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
-                            );
-                        }
-
-                        if (filter.Method == PagedListQueryFilterMethod.Great)
-                        {
-                            body = Expression.GreaterThan(
-                                memberExpression,
-                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
-                            );
-                        }
-
-                        if (filter.Method == PagedListQueryFilterMethod.Like)
-                        {
-                            body = Expression.Call(
-                                memberExpression,
-                                typeof(string).GetMethod("Contains", [typeof(string)])!,
-                                Expression.Constant(ToType(filter.Value, memberExpression.Type))
-                            );
-                        }
-
-                        if (filter.Method == PagedListQueryFilterMethod.ILike)
-                        {
-                            MethodCallExpression indexOf = Expression.Call(
-                                memberExpression,
-                                "IndexOf",
-                                null,
-                                Expression.Constant(filter.Value, typeof(string)),
-                                Expression.Constant(StringComparison.InvariantCultureIgnoreCase)
-                            );
-
-                            body = Expression.GreaterThanOrEqual(indexOf, Expression.Constant(0));
-                        }
-
-                        if (body is Expression)
-                        {
-                            Expression<Func<TEntity, bool>> lambda = Expression.Lambda<Func<TEntity, bool>>(body, param);
-                            queryableData = queryableData.Where(lambda);
-                        }
-                    }
-                }
+                continue;
             }
+
+            Expression body = filter.Method switch
+            {
+                PagedListQueryFilterMethod.Less => Expression.LessThan(
+                    memberExpression,
+                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                ),
+                PagedListQueryFilterMethod.LessOrEqual => Expression.LessThanOrEqual(
+                    memberExpression,
+                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                ),
+                PagedListQueryFilterMethod.Equal => Expression.Equal(
+                    memberExpression,
+                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                ),
+                PagedListQueryFilterMethod.GreatOrEqual => Expression.GreaterThanOrEqual(
+                    memberExpression,
+                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                ),
+                PagedListQueryFilterMethod.Great => Expression.GreaterThan(
+                    memberExpression,
+                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                ),
+                PagedListQueryFilterMethod.Like => Expression.Call(
+                    memberExpression,
+                    typeof(string).GetMethod("Contains", [typeof(string)])!,
+                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                ),
+                PagedListQueryFilterMethod.ILike => Expression.GreaterThanOrEqual(
+                    Expression.Call(
+                        memberExpression,
+                        "IndexOf",
+                        null,
+                        Expression.Constant(filter.Value, typeof(string)),
+                        Expression.Constant(StringComparison.InvariantCultureIgnoreCase)
+                    ),
+                    Expression.Constant(0)
+                ),
+                _ => throw new ArgumentOutOfRangeException(nameof(filter.Method), filter.Method, $"Unsupported filter method: {filter.Method}")
+            };
+
+            Expression<Func<TEntity, bool>> lambda = Expression.Lambda<Func<TEntity, bool>>(body, param);
+            queryableData = queryableData.Where(lambda);
         }
+
         return queryableData;
     }
 
-    protected IQueryable<TEntity> AddSort(IQueryable<TEntity> queryableData, IList<PagedListQuerySort>? sorts)
+    protected IQueryable<TEntity> AddSort(IQueryable<TEntity> queryableData, PagedListQuerySort[] sorts)
     {
-        if (sorts is not null)
+        int sortIndex = 0;
+        for (int i = 0; i < sorts.Length; i++)
         {
-            int sortIndex = 0;
-            foreach (PagedListQuerySort sort in sorts)
+            ref readonly PagedListQuerySort sort = ref sorts[i];
+
+            ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
+            Expression? memberExpression = GetMemberExpression(sort.Property, param, typeof(TEntity));
+
+            if (memberExpression is not MemberExpression)
             {
-                if (!string.IsNullOrEmpty(sort.Property))
-                {
-                    ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-                    Expression? memberExpression = GetMemberExpression(sort.Property, param, typeof(TEntity));
-
-                    if (memberExpression is MemberExpression)
-                    {
-                        LambdaExpression selector = Expression.Lambda(memberExpression, param);
-
-                        if (sort.Direction == PagedListQuerySortDirection.Asc)
-                        {
-                            MethodCallExpression call = Expression.Call(
-                                typeof(Queryable),
-                                sortIndex == 0 ? "OrderBy" : "ThenBy",
-                                [typeof(TEntity), selector.Body.Type],
-                                queryableData.Expression,
-                                selector
-                            );
-                            queryableData = (IQueryable<TEntity>)queryableData.Provider.CreateQuery(call);
-                        }
-                        else
-                        {
-                            MethodCallExpression call = Expression.Call(
-                                typeof(Queryable),
-                                sortIndex == 0 ? "OrderByDescending" : "ThenByDescending",
-                                [typeof(TEntity), selector.Body.Type],
-                                queryableData.Expression,
-                                selector
-                            );
-                            queryableData = (IQueryable<TEntity>)queryableData.Provider.CreateQuery(call);
-                        }
-
-                        sortIndex++;
-                    }
-                }
+                continue;
             }
+
+            LambdaExpression selector = Expression.Lambda(memberExpression, param);
+            string methodName = sort.Direction == PagedListQuerySortDirection.Asc
+                ? (sortIndex == 0 ? "OrderBy" : "ThenBy")
+                : (sortIndex == 0 ? "OrderByDescending" : "ThenByDescending");
+
+            MethodCallExpression call = Expression.Call(
+                typeof(Queryable),
+                methodName,
+                [typeof(TEntity), selector.Body.Type],
+                queryableData.Expression,
+                selector
+            );
+
+            queryableData = (IQueryable<TEntity>)queryableData.Provider.CreateQuery(call);
+            sortIndex++;
         }
 
         return queryableData;
@@ -280,14 +240,16 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
         Type elementType = entityType;
         Expression memberExpression = param;
-        foreach (string member in nestedProperty.Split('.'))
+        string[] members = nestedProperty.Split('.');
+
+        for (int i = 0; i < members.Length; i++)
         {
-            string propName = ToCamelCase(member);
+            string propName = ToCamelCase(members[i]);
             PropertyInfo? sortableProperty = elementType.GetProperty(propName);
 
             if (sortableProperty is not null)
             {
-                memberExpression = Expression.PropertyOrField(memberExpression, member);
+                memberExpression = Expression.PropertyOrField(memberExpression, propName);
                 elementType = sortableProperty.PropertyType;
             }
             else
