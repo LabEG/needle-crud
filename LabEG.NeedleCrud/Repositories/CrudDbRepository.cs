@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
 
 namespace LabEG.NeedleCrud.Repositories;
 
@@ -103,7 +103,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return resultEntity;
     }
 
-    public virtual async Task<TEntity> GetGraph(TId id, JObject graph)
+    public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph)
     {
         IQueryable<TEntity> graphQuery = DBContext.Set<TEntity>();
 
@@ -216,29 +216,28 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return queryableData;
     }
 
-    protected IList<string> ExtractIncludes(JObject graph, List<string>? listOfProps = null, string? previosProp = null)
+    protected IList<string> ExtractIncludes(JsonObject graph, List<string>? listOfProps = null, string? previosProp = null)
     {
         // Pre-allocate capacity to avoid multiple resizes (estimate: graph.Count * 2 for nested depth)
 #pragma warning disable IDE0028 // Simplify collection initialization
         listOfProps ??= new List<string>(capacity: graph.Count * 2);
 #pragma warning restore IDE0028 // Simplify collection initialization
 
-        foreach (KeyValuePair<string, JToken?> prop in graph)
+        foreach (KeyValuePair<string, JsonNode?> prop in graph)
         {
-            // Cache ToObject result to avoid calling it twice (expensive operation)
-            object? propValue = prop.Value?.ToObject<object>();
             string camelKey = ToCamelCase(prop.Key);
 
-            if (propValue is object && prop.Value is not null)
+            // Use pattern matching to check if Value is a JsonObject (nested graph)
+            if (prop.Value is JsonObject nestedObject)
             {
                 // Use string interpolation - faster than concatenation for 2-3 parts
                 string deepProp = previosProp is not null ? $"{previosProp}.{camelKey}" : camelKey;
-                ExtractIncludes((JObject)prop.Value, listOfProps, deepProp);
+                ExtractIncludes(nestedObject, listOfProps, deepProp);
             }
-            else if (propValue is null)
+            else if (prop.Value is null)
             {
                 listOfProps.Add(previosProp is not null ? $"{previosProp}.{camelKey}" : camelKey);
-            } // else ignore
+            } // else ignore JsonValue nodes
         }
 
         return listOfProps;

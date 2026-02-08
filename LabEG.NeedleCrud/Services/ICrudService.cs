@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace LabEG.NeedleCrud.Services;
 
@@ -72,5 +72,5 @@ public interface ICrudService<TEntity, TId>
     /// <returns>A task that represents the asynchronous operation. The task result contains the entity with its specified related entities loaded.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="graph"/> is null.</exception>
     /// <exception cref="ObjectNotFoundException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
-    Task<TEntity> GetGraph(TId id, JObject graph);
+    Task<TEntity> GetGraph(TId id, JsonObject graph);
 }

@@ -3,8 +3,7 @@ using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Services;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace LabEG.NeedleCrud.Controllers;
 
@@ -76,7 +75,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
             throw new NeedleCrudException("Parameter 'graph' cannot be null or empty");
         }
 
-        JObject graphObject = JsonConvert.DeserializeObject(graph) as JObject ??
+        JsonObject graphObject = JsonNode.Parse(graph)?.AsObject() ??
             throw new NeedleCrudException("Invalid JSON in 'graph' parameter");
 
         TEntity graphResult = await Service.GetGraph(id, graphObject);

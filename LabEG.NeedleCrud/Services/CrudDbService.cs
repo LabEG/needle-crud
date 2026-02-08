@@ -2,7 +2,7 @@ using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace LabEG.NeedleCrud.Services;
 
@@ -55,7 +55,7 @@ where TEntity : class, IEntity<TId>, new()
         return await Repository.GetPaged(query);
     }
 
-    public virtual async Task<TEntity> GetGraph(TId id, JObject graph)
+    public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph)
     {
         return await Repository.GetGraph(id, graph);
     }

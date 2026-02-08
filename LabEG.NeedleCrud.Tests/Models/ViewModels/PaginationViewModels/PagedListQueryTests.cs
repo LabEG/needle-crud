@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace LabEG.NeedleCrud.Tests.Models.ViewModels.PaginationViewModels;
 
@@ -269,9 +269,9 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
-        Assert.IsType<JObject>(query.Graph);
-        Assert.NotNull(query.Graph["user"]);
-        Assert.NotNull(query.Graph["items"]);
+        Assert.IsType<JsonObject>(query.Graph);
+        Assert.True(query.Graph.ContainsKey("user"));
+        Assert.True(query.Graph.ContainsKey("items"));
     }
 
     [Fact]
@@ -285,8 +285,11 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
+        Assert.True(query.Graph.ContainsKey("user"));
         Assert.NotNull(query.Graph["user"]);
-        Assert.NotNull(query.Graph["user"]!["profile"]);
+        JsonObject? userGraph = query.Graph["user"]?.AsObject();
+        Assert.NotNull(userGraph);
+        Assert.True(userGraph.ContainsKey("profile"));
     }
 
     [Fact]
@@ -371,7 +374,7 @@ public class PagedListQueryTests
         Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
 
         Assert.NotNull(query.Graph);
-        Assert.NotNull(query.Graph["profile"]);
+        Assert.True(query.Graph.ContainsKey("profile"));
     }
 
     [Fact]
