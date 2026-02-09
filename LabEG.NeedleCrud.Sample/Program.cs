@@ -1,8 +1,10 @@
+using LabEG.NeedleCrud.Infrastructure;
 using LabEG.NeedleCrud.Repositories;
 using LabEG.NeedleCrud.Services;
 using LabEG.NeedleCrud.Benchmarks.BLL;
 using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,11 @@ builder.Services.AddScoped(typeof(ICrudDbService<,,>), typeof(CrudDbService<,,>)
 
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Configure Swagger/OpenAPI with XML documentation
 builder.Services.AddEndpointsApiExplorer();
@@ -73,6 +79,9 @@ using (IServiceScope scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+// Add NeedleCrud exception handler middleware
+app.UseNeedleCrudExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
