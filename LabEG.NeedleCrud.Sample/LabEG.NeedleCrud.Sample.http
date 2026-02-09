@@ -1,6 +1,0 @@
-@LabEG.NeedleCrud.Sample_HostAddress = http://localhost:5010
-
-GET {{LabEG.NeedleCrud.Sample_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
