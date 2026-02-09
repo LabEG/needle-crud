@@ -44,7 +44,7 @@ public class PagedListQuery
     /// <param name="sort">A comma-separated string of sort expressions in the format: property~direction.
     /// Example: "name~asc,age~desc". Direction can be "asc" or "desc". If null or empty, default sorting is used.</param>
     /// <param name="graph">A JSON string representing the graph of related entities to load. If null or empty, no related entities are loaded.</param>
-    /// <exception cref="NeedleCrudException">Thrown when an unknown filter method is encountered.</exception>
+    /// <exception cref="Exceptions.NeedleCrudException">Thrown when an unknown filter method is encountered.</exception>
     public PagedListQuery(
         int? pageSize,
         int? pageNumber,

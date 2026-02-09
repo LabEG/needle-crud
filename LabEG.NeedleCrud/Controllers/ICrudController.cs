@@ -25,7 +25,7 @@ public interface ICrudController<TEntity, TId>
     /// </summary>
     /// <param name="id">The identifier of the entity to delete.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
-    /// <exception cref="ObjectNotFoundException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
+    /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
     Task Delete(TId id);
 
     /// <summary>
@@ -42,7 +42,7 @@ public interface ICrudController<TEntity, TId>
     /// </summary>
     /// <param name="id">The identifier of the entity to retrieve.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the entity with the specified identifier.</returns>
-    /// <exception cref="ObjectNotFoundException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
+    /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
     Task<TEntity> GetById(TId id);
 
     /// <summary>
@@ -52,7 +52,7 @@ public interface ICrudController<TEntity, TId>
     /// <param name="entity">The entity containing updated values. Must not be null.</param>
     /// <returns>A task that represents the asynchronous update operation.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is null.</exception>
-    /// <exception cref="ObjectNotFoundException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
+    /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
     Task Update(TId id, TEntity entity);
 
     /// <summary>
@@ -73,6 +73,6 @@ public interface ICrudController<TEntity, TId>
     /// <param name="id">The identifier of the entity to retrieve.</param>
     /// <param name="graph">The graph expression specifying which related entities to include (eager loading). Pass null or empty string to load only the main entity.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the entity with its specified related entities loaded.</returns>
-    /// <exception cref="ObjectNotFoundException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
+    /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
     Task<TEntity> GetGraph(TId id, string graph);
 }

@@ -9,19 +9,33 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LabEG.NeedleCrud.Repositories;
 
+/// <summary>
+/// Repository implementation for database CRUD operations using Entity Framework
+/// </summary>
+/// <typeparam name="TDbContext">Type of the Entity Framework DbContext</typeparam>
+/// <typeparam name="TEntity">Type of the entity</typeparam>
+/// <typeparam name="TId">Type of the entity's primary key</typeparam>
 public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbContext, TEntity, TId>
     where TDbContext : DbContext
     where TEntity : class, IEntity<TId>, new()
 {
     private static readonly Dictionary<Type, TypeConverter> _converterCache = [];
 
+    /// <summary>
+    /// Gets the Entity Framework database context
+    /// </summary>
     protected TDbContext DBContext { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the repository
+    /// </summary>
+    /// <param name="dbContext">Entity Framework database context</param>
     public CrudDbRepository(TDbContext dbContext)
     {
         DBContext = dbContext;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<TEntity> Create(TEntity entity)
     {
         entity.Id = default;
@@ -30,6 +44,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return entity;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<TEntity> GetById(TId id)
     {
         TEntity resultEntity = await DBContext
@@ -40,11 +55,13 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return resultEntity;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<TEntity[]> GetAll()
     {
         return await DBContext.Set<TEntity>().ToArrayAsync();
     }
 
+    /// <inheritdoc/>
     public virtual async Task Update(TId id, TEntity entity)
     {
         bool exists = await DBContext.Set<TEntity>().AnyAsync(e => e.Id!.Equals(id));
@@ -57,12 +74,14 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         DBContext.Set<TEntity>().Update(entity);
     }
 
+    /// <inheritdoc/>
     public virtual async Task Delete(TId id)
     {
         TEntity entity = await GetById(id);
         DBContext.Set<TEntity>().Remove(entity);
     }
 
+    /// <inheritdoc/>
     public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity>? qData = null)
     {
         PagedList<TEntity> resultEntity = new();
@@ -103,6 +122,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return resultEntity;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph)
     {
         IQueryable<TEntity> graphQuery = DBContext.Set<TEntity>();
@@ -120,6 +140,12 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return resultEntity;
     }
 
+    /// <summary>
+    /// Applies filter conditions to the queryable data
+    /// </summary>
+    /// <param name="queryableData">The queryable data to filter</param>
+    /// <param name="filters">Array of filter conditions</param>
+    /// <returns>Filtered queryable data</returns>
     protected IQueryable<TEntity> AddFilter(IQueryable<TEntity> queryableData, PagedListQueryFilter[] filters)
     {
         for (int i = 0; i < filters.Length; i++)
@@ -181,6 +207,12 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return queryableData;
     }
 
+    /// <summary>
+    /// Applies sorting to the queryable data
+    /// </summary>
+    /// <param name="queryableData">The queryable data to sort</param>
+    /// <param name="sorts">Array of sort conditions</param>
+    /// <returns>Sorted queryable data</returns>
     protected IQueryable<TEntity> AddSort(IQueryable<TEntity> queryableData, PagedListQuerySort[] sorts)
     {
         int sortIndex = 0;
@@ -216,6 +248,13 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return queryableData;
     }
 
+    /// <summary>
+    /// Extracts navigation property paths from the graph JSON object for eager loading
+    /// </summary>
+    /// <param name="graph">JSON object representing the graph structure</param>
+    /// <param name="listOfProps">List of property paths (used for recursion)</param>
+    /// <param name="previosProp">Previous property path (used for recursion)</param>
+    /// <returns>List of navigation property paths</returns>
     protected IList<string> ExtractIncludes(JsonObject graph, List<string>? listOfProps = null, string? previosProp = null)
     {
         // Pre-allocate capacity to avoid multiple resizes (estimate: graph.Count * 2 for nested depth)
@@ -243,6 +282,13 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return listOfProps;
     }
 
+    /// <summary>
+    /// Gets a member expression for a nested property path
+    /// </summary>
+    /// <param name="nestedProperty">Nested property path (e.g., "Author.Name")</param>
+    /// <param name="param">Parameter expression</param>
+    /// <param name="entityType">Entity type</param>
+    /// <returns>Member expression or null if property not found</returns>
     protected Expression? GetMemberExpression(string nestedProperty, ParameterExpression param, Type entityType)
     {
         // https://stackoverflow.com/questions/16208214/construct-lambdaexpression-for-nested-property-from-string
@@ -270,6 +316,11 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         return memberExpression;
     }
 
+    /// <summary>
+    /// Converts a string value to PascalCase
+    /// </summary>
+    /// <param name="value">String value to convert</param>
+    /// <returns>PascalCase string</returns>
     protected string ToCamelCase(string value)
     {
         // Single allocation using string.Create instead of char + Substring (2 allocations)
@@ -280,6 +331,12 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         });
     }
 
+    /// <summary>
+    /// Converts a string value to the specified type
+    /// </summary>
+    /// <param name="value">String value to convert</param>
+    /// <param name="type">Target type</param>
+    /// <returns>Converted value</returns>
     protected object ToType(string value, Type type)
     {
         // Direct type checks in order of frequency for optimal performance

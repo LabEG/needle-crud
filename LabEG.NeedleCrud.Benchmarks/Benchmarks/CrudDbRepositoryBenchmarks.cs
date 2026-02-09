@@ -65,13 +65,7 @@ public class CrudDbRepositoryCrudMethodsBenchmarks
         _context.ChangeTracker.Clear();
 
         // Seed database with fresh test data
-        _context.Users.AddRange(_testData.Users);
-        _context.Authors.AddRange(_testData.Authors);
-        _context.Categories.AddRange(_testData.Categories);
-        _context.Books.AddRange(_testData.Books);
-        _context.Loans.AddRange(_testData.Loans);
-        _context.Reviews.AddRange(_testData.Reviews);
-        _context.SaveChanges();
+        TestDataGenerator.SeedDatabase(_context, _testData);
 
         // Clear change tracker again before benchmarks run
         _context.ChangeTracker.Clear();

@@ -22,21 +22,10 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
 {
     private LibraryDbContext _context = null!;
     private TestableRepository _repository = null!;
-    private TestDataSet _testData = null!;
     private string _databaseName = null!;
 
     private IQueryable<Book> _queryableData = null!;
     private Consumer _consumer = null!;
-
-    // Same queries as in CrudDbRepositoryGetPagedBenchmarks for direct comparison
-    private PagedListQuery _simpleQuery = null!;
-    private PagedListQuery _simpleWithFilterQuery = null!;
-    private PagedListQuery _simpleWithSortQuery = null!;
-    private PagedListQuery _complexFilterQuery = null!;
-    private PagedListQuery _complexSortQuery = null!;
-    private PagedListQuery _complexFullQuery = null!;
-    private PagedListQuery _simpleGraphQuery = null!;
-    private PagedListQuery _complexGraphQuery = null!;
 
     [Params(DatabaseProvider.InMemory, DatabaseProvider.PostgreSQL)]
     public DatabaseProvider Provider { get; set; }
@@ -44,9 +33,6 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        // Generate test data once
-        _testData = TestDataGenerator.Generate(seed: 42);
-
         // Create unique database name for this run
         _databaseName = $"ComponentsBenchmarkDb_{Provider}_{Guid.NewGuid():N}";
 
@@ -55,13 +41,7 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
         _context.Database.EnsureCreated();
 
         // Seed database with test data
-        _context.Users.AddRange(_testData.Users);
-        _context.Authors.AddRange(_testData.Authors);
-        _context.Categories.AddRange(_testData.Categories);
-        _context.Books.AddRange(_testData.Books);
-        _context.Loans.AddRange(_testData.Loans);
-        _context.Reviews.AddRange(_testData.Reviews);
-        _context.SaveChanges();
+        TestDataGenerator.SeedDatabase(_context, seed: 42);
 
         // Clear change tracker
         _context.ChangeTracker.Clear();
@@ -71,9 +51,6 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
 
         // Create consumer for IQueryable materialization
         _consumer = new Consumer();
-
-        // Prepare test data
-        SetupTestData();
     }
 
     [GlobalCleanup]
@@ -91,117 +68,40 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
         _context.ChangeTracker.Clear();
     }
 
-    private void SetupTestData()
-    {
-        // Use same queries as CrudDbRepositoryGetPagedBenchmarks for direct comparison
-
-        // Simple query - just pagination
-        _simpleQuery = new PagedListQuery(
-            pageSize: 10,
-            pageNumber: 1,
-            filter: null,
-            sort: null,
-            graph: null
-        );
-
-        // Simple with single filter
-        _simpleWithFilterQuery = new PagedListQuery(
-            pageSize: 10,
-            pageNumber: 1,
-            filter: "IsAvailable~=~true",
-            sort: null,
-            graph: null
-        );
-
-        // Simple with single sort
-        _simpleWithSortQuery = new PagedListQuery(
-            pageSize: 10,
-            pageNumber: 1,
-            filter: null,
-            sort: "Title~asc",
-            graph: null
-        );
-
-        // Complex filter - multiple conditions
-        _complexFilterQuery = new PagedListQuery(
-            pageSize: 10,
-            pageNumber: 1,
-            filter: "IsAvailable~=~true,PageCount~>~200,PageCount~<~800,Language~like~English",
-            sort: null,
-            graph: null
-        );
-
-        // Complex sort - multiple fields
-        _complexSortQuery = new PagedListQuery(
-            pageSize: 10,
-            pageNumber: 1,
-            filter: null,
-            sort: "Language~asc,PageCount~desc,Title~asc",
-            graph: null
-        );
-
-        // Complex full query - filters, sorts, pagination
-        _complexFullQuery = new PagedListQuery(
-            pageSize: 20,
-            pageNumber: 2,
-            filter: "IsAvailable~=~true,PageCount~>=~300,Language~like~English",
-            sort: "PublicationDate~desc,Title~asc",
-            graph: null
-        );
-
-        // Simple graph query - single include
-        _simpleGraphQuery = new PagedListQuery(
-            pageSize: 10,
-            pageNumber: 1,
-            filter: null,
-            sort: null,
-            graph: "{\"Author\":null}"
-        );
-
-        // Complex graph query - multiple nested includes
-        _complexGraphQuery = new PagedListQuery(
-            pageSize: 10,
-            pageNumber: 1,
-            filter: "IsAvailable~=~true",
-            sort: "Title~asc",
-            graph: "{\"Author\":null,\"Category\":null}"
-        );
-    }
-
     #region AddFilter Benchmarks
 
     [Benchmark]
     public void AddFilter_NoFilters()
     {
-        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _simpleQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.Simple.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_SimpleWithFilter()
     {
-        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _simpleWithFilterQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.SimpleWithFilter.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_ComplexFilter()
     {
-        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _complexFilterQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.ComplexFilter.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_ComplexFull()
     {
-        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _complexFullQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.ComplexFull.Filter);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddFilter_ComplexGraph()
     {
-        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, _complexGraphQuery.Filter);
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.ComplexGraph.Filter);
         _consumer.Consume(result.Expression);
     }
 
@@ -212,35 +112,35 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public void AddSort_NoSort()
     {
-        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _simpleQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.Simple.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_SimpleWithSort()
     {
-        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _simpleWithSortQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.SimpleWithSort.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_ComplexSort()
     {
-        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _complexSortQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.ComplexSort.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_ComplexFull()
     {
-        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _complexFullQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.ComplexFull.Sort);
         _consumer.Consume(result.Expression);
     }
 
     [Benchmark]
     public void AddSort_ComplexGraph()
     {
-        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, _complexGraphQuery.Sort);
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.ComplexGraph.Sort);
         _consumer.Consume(result.Expression);
     }
 
@@ -251,13 +151,13 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public IList<string> ExtractIncludes_SimpleGraph()
     {
-        return _repository.PublicExtractIncludes(_simpleGraphQuery.Graph!);
+        return _repository.PublicExtractIncludes(PagedListQueryFixtures.SimpleGraph.Graph!);
     }
 
     [Benchmark]
     public IList<string> ExtractIncludes_ComplexGraph()
     {
-        return _repository.PublicExtractIncludes(_complexGraphQuery.Graph!);
+        return _repository.PublicExtractIncludes(PagedListQueryFixtures.ComplexGraph.Graph!);
     }
 
     #endregion
@@ -335,44 +235,44 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public async Task<int> Combined_SimpleWithFilter_FilterAndCount()
     {
-        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _simpleWithFilterQuery.Filter);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.SimpleWithFilter.Filter);
         return await filtered.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_SimpleWithSort_SortAndCount()
     {
-        IQueryable<Book> sorted = _repository.PublicAddSort(_queryableData, _simpleWithSortQuery.Sort);
+        IQueryable<Book> sorted = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.SimpleWithSort.Sort);
         return await sorted.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexFilter_FilterAndCount()
     {
-        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _complexFilterQuery.Filter);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.ComplexFilter.Filter);
         return await filtered.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexSort_SortAndCount()
     {
-        IQueryable<Book> sorted = _repository.PublicAddSort(_queryableData, _complexSortQuery.Sort);
+        IQueryable<Book> sorted = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.ComplexSort.Sort);
         return await sorted.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexFull_FilterSortAndCount()
     {
-        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _complexFullQuery.Filter);
-        IQueryable<Book> sorted = _repository.PublicAddSort(filtered, _complexFullQuery.Sort);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.ComplexFull.Filter);
+        IQueryable<Book> sorted = _repository.PublicAddSort(filtered, PagedListQueryFixtures.ComplexFull.Sort);
         return await sorted.CountAsync();
     }
 
     [Benchmark]
     public async Task<int> Combined_ComplexGraph_FilterSortAndCount()
     {
-        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, _complexGraphQuery.Filter);
-        IQueryable<Book> sorted = _repository.PublicAddSort(filtered, _complexGraphQuery.Sort);
+        IQueryable<Book> filtered = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.ComplexGraph.Filter);
+        IQueryable<Book> sorted = _repository.PublicAddSort(filtered, PagedListQueryFixtures.ComplexGraph.Sort);
         return await sorted.CountAsync();
     }
 

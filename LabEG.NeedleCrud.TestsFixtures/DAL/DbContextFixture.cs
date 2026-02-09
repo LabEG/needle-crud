@@ -8,7 +8,14 @@ namespace LabEG.NeedleCrud.Benchmarks.BLL;
 /// </summary>
 public enum DatabaseProvider
 {
+    /// <summary>
+    /// In-memory database provider for testing
+    /// </summary>
     InMemory,
+
+    /// <summary>
+    /// PostgreSQL database provider
+    /// </summary>
     PostgreSQL
 }
 
@@ -28,22 +35,48 @@ public enum DatabaseProvider
 /// </remarks>
 public class LibraryDbContext : DbContext
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LibraryDbContext"/> class.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
     public LibraryDbContext(DbContextOptions<LibraryDbContext> options) : base(options)
     {
     }
 
+    /// <summary>
+    /// Gets or sets the Users DbSet
+    /// </summary>
     public DbSet<User> Users { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the Authors DbSet
+    /// </summary>
     public DbSet<Author> Authors { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the Categories DbSet
+    /// </summary>
     public DbSet<Category> Categories { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the Books DbSet
+    /// </summary>
     public DbSet<Book> Books { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the Loans DbSet
+    /// </summary>
     public DbSet<Loan> Loans { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the Reviews DbSet
+    /// </summary>
     public DbSet<Review> Reviews { get; set; } = null!;
 
+    /// <summary>
+    /// Configures the schema needed for the library context.
+    /// </summary>
+    /// <param name="modelBuilder">The builder being used to construct the model for this context.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -133,7 +166,7 @@ public static class LibraryDbContextFactory
     /// <returns>Configured LibraryDbContext instance</returns>
     public static LibraryDbContext Create(DatabaseProvider provider, string databaseName = "TestDatabase")
     {
-        var optionsBuilder = new DbContextOptionsBuilder<LibraryDbContext>();
+        DbContextOptionsBuilder<LibraryDbContext> optionsBuilder = new();
 
         switch (provider)
         {
@@ -150,28 +183,4 @@ public static class LibraryDbContextFactory
         return new LibraryDbContext(optionsBuilder.Options);
     }
 
-    /// <summary>
-    /// Creates DbContextOptions for specified database provider
-    /// </summary>
-    /// <param name="provider">Database provider type</param>
-    /// <param name="databaseName">Database name (used for InMemory provider)</param>
-    /// <returns>Configured DbContextOptions</returns>
-    public static DbContextOptions<LibraryDbContext> CreateOptions(DatabaseProvider provider, string databaseName = "TestDatabase")
-    {
-        var optionsBuilder = new DbContextOptionsBuilder<LibraryDbContext>();
-
-        switch (provider)
-        {
-            case DatabaseProvider.InMemory:
-                optionsBuilder.UseInMemoryDatabase(databaseName);
-                break;
-            case DatabaseProvider.PostgreSQL:
-                optionsBuilder.UseNpgsql(PostgreSqlConnectionString);
-                break;
-            default:
-                throw new ArgumentException($"Unsupported database provider: {provider}", nameof(provider));
-        }
-
-        return optionsBuilder.Options;
-    }
 }

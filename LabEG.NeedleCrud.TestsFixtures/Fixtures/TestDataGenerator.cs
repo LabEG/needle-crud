@@ -51,7 +51,16 @@ public static class TestDataGenerator
     public static void SeedDatabase(LibraryDbContext context, int seed = 12345)
     {
         TestDataSet data = Generate(seed);
+        SeedDatabase(context, data);
+    }
 
+    /// <summary>
+    /// Seeds database context with provided test data
+    /// </summary>
+    /// <param name="context">Database context to seed</param>
+    /// <param name="data">Test data set to insert into database</param>
+    public static void SeedDatabase(LibraryDbContext context, TestDataSet data)
+    {
         context.Users.AddRange(data.Users);
         context.Authors.AddRange(data.Authors);
         context.Categories.AddRange(data.Categories);
@@ -92,7 +101,7 @@ public static class TestDataGenerator
 
     private static List<Category> GenerateCategories()
     {
-        var categoryNames = new[]
+        string[] categoryNames = new[]
         {
             "Fiction", "Non-Fiction", "Science Fiction", "Mystery",
             "Romance", "Biography", "History", "Technology"
@@ -142,7 +151,7 @@ public static class TestDataGenerator
                     return null;
                 }
 
-                var daysLate = (l.ReturnDate.Value - l.DueDate).Days;
+                int daysLate = (l.ReturnDate.Value - l.DueDate).Days;
                 return daysLate > 0 ? daysLate * 0.50m : null;
             })
             .RuleFor(l => l.Notes, f => f.Random.Bool(0.3f) ? f.Lorem.Sentence() : string.Empty);
@@ -170,10 +179,33 @@ public static class TestDataGenerator
 /// </summary>
 public class TestDataSet
 {
+    /// <summary>
+    /// Gets or sets the list of users
+    /// </summary>
     public List<User> Users { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the list of authors
+    /// </summary>
     public List<Author> Authors { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the list of categories
+    /// </summary>
     public List<Category> Categories { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the list of books
+    /// </summary>
     public List<Book> Books { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the list of loans
+    /// </summary>
     public List<Loan> Loans { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the list of reviews
+    /// </summary>
     public List<Review> Reviews { get; set; } = [];
 }

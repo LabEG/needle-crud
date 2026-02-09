@@ -38,21 +38,21 @@ public class PagedListQueryStructBenchmarks
     [Benchmark]
     public string AccessFilterProperties()
     {
-        var filter = new PagedListQueryFilter(ComplexFilter.AsSpan());
+        PagedListQueryFilter filter = new(ComplexFilter.AsSpan());
         return filter.Property + filter.Value + filter.Method.ToString();
     }
 
     [Benchmark]
     public string AccessSortProperties()
     {
-        var sort = new PagedListQuerySort(ComplexSort.AsSpan());
+        PagedListQuerySort sort = new(ComplexSort.AsSpan());
         return sort.Property + sort.Direction.ToString();
     }
 
     [Benchmark]
     public PagedListQueryFilter[] CreateMultipleFilters()
     {
-        var filters = new PagedListQueryFilter[5];
+        PagedListQueryFilter[] filters = new PagedListQueryFilter[5];
         filters[0] = new PagedListQueryFilter("id~=~123".AsSpan());
         filters[1] = new PagedListQueryFilter("name~like~John".AsSpan());
         filters[2] = new PagedListQueryFilter("age~>=~18".AsSpan());
@@ -64,7 +64,7 @@ public class PagedListQueryStructBenchmarks
     [Benchmark]
     public PagedListQuerySort[] CreateMultipleSorts()
     {
-        var sorts = new PagedListQuerySort[3];
+        PagedListQuerySort[] sorts = new PagedListQuerySort[3];
         sorts[0] = new PagedListQuerySort("name~asc".AsSpan());
         sorts[1] = new PagedListQuerySort("date~desc".AsSpan());
         sorts[2] = new PagedListQuerySort("priority~asc".AsSpan());
