@@ -6,10 +6,44 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>LabEG.NeedleCrud</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>LabEG</Authors>
+    <Company>LabEG</Company>
+    <Product>NeedleCrud</Product>
+    <Description>High-performance CRUD library for ASP.NET Core with advanced filtering, sorting, pagination, and eager loading through URL query parameters. No GraphQL complexity, just simple REST with powerful capabilities.</Description>
+    <PackageTags>crud;rest;api;aspnetcore;entityframework;filtering;sorting;pagination;eager-loading;repository;service;controller</PackageTags>
+    <PackageProjectUrl>https://github.com/LabEG/needle-crud</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LabEG/needle-crud</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>Copyright (c) 2026 LabEG</Copyright>
+    <PackageReleaseNotes>Initial release with support for .NET 8.0, 9.0, and 10.0</PackageReleaseNotes>
+
+    <!-- Package Build Configuration -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <!-- Include README in package -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Source Link for debugging -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">

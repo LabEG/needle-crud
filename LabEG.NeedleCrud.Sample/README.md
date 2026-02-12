@@ -22,8 +22,8 @@ Open **http://localhost:8080** for interactive Swagger UI.
 
 ```bash
 # Clone repository
-git clone https://github.com/LabEG/NeedleCrud.git
-cd NeedleCrud/LabEG.NeedleCrud.Sample
+git clone https://github.com/LabEG/needle-crud.git
+cd needle-crud/LabEG.NeedleCrud.Sample
 
 # Run application
 dotnet run

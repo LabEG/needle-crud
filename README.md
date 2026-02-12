@@ -460,9 +460,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Support
 
-- 📖 [Documentation](https://github.com/LabEG/NeedleCrud)
-- 🐛 [Issue Tracker](https://github.com/LabEG/NeedleCrud/issues)
-- 💡 [Discussions](https://github.com/LabEG/NeedleCrud/discussions)
+- 📖 [Documentation](https://github.com/LabEG/needle-crud)
+- 🐛 [Issue Tracker](https://github.com/LabEG/needle-crud/issues)
+- 💡 [Discussions](https://github.com/LabEG/needle-crud/discussions)
 
 ---
 

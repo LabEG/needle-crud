@@ -213,9 +213,9 @@ Open http://localhost:8080 for interactive Swagger UI.
 
 ## Support
 
-- 📖 [GitHub Repository](https://github.com/LabEG/NeedleCrud)
-- 🐛 [Issue Tracker](https://github.com/LabEG/NeedleCrud/issues)
-- 💡 [Discussions](https://github.com/LabEG/NeedleCrud/discussions)
+- 📖 [GitHub Repository](https://github.com/LabEG/needle-crud)
+- 🐛 [Issue Tracker](https://github.com/LabEG/needle-crud/issues)
+- 💡 [Discussions](https://github.com/LabEG/needle-crud/discussions)
 
 ## License
 
