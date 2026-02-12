@@ -52,7 +52,7 @@ public class PagedListQueryTests
         // Assert
         Assert.NotNull(query.Filter);
         PagedListQueryFilter filterItem = Assert.Single(query.Filter);
-        Assert.Equal("Name", filterItem.Property);
+        Assert.Equal("name", filterItem.Property);
         Assert.Equal(PagedListQueryFilterMethod.Equal, query.Filter[0].Method);
         Assert.Equal("John", query.Filter[0].Value);
     }
@@ -70,15 +70,15 @@ public class PagedListQueryTests
         Assert.NotNull(query.Filter);
         Assert.Equal(3, query.Filter.Length);
 
-        Assert.Equal("Name", query.Filter[0].Property);
+        Assert.Equal("name", query.Filter[0].Property);
         Assert.Equal(PagedListQueryFilterMethod.Like, query.Filter[0].Method);
         Assert.Equal("John", query.Filter[0].Value);
 
-        Assert.Equal("Age", query.Filter[1].Property);
+        Assert.Equal("age", query.Filter[1].Property);
         Assert.Equal(PagedListQueryFilterMethod.GreatOrEqual, query.Filter[1].Method);
         Assert.Equal("18", query.Filter[1].Value);
 
-        Assert.Equal("City", query.Filter[2].Property);
+        Assert.Equal("city", query.Filter[2].Property);
         Assert.Equal(PagedListQueryFilterMethod.Equal, query.Filter[2].Method);
         Assert.Equal("NY", query.Filter[2].Value);
     }
@@ -117,7 +117,7 @@ public class PagedListQueryTests
     }
 
     [Fact]
-    public void Constructor_WithLowercasePropertyName_ShouldCapitalizeFirstLetter()
+    public void Constructor_WithLowercasePropertyName_ShouldPreserveCase()
     {
         // Arrange
         const string filter = "userName~=~test";
@@ -126,7 +126,7 @@ public class PagedListQueryTests
         PagedListQuery query = new(null, null, filter, null, null);
 
         // Assert
-        Assert.Equal("UserName", query.Filter![0].Property);
+        Assert.Equal("userName", query.Filter![0].Property);
     }
 
     #endregion
@@ -179,7 +179,7 @@ public class PagedListQueryTests
         // Assert
         Assert.NotNull(query.Sort);
         PagedListQuerySort sortItem = Assert.Single(query.Sort);
-        Assert.Equal("Name", sortItem.Property);
+        Assert.Equal("name", sortItem.Property);
         Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
     }
 
@@ -196,13 +196,13 @@ public class PagedListQueryTests
         Assert.NotNull(query.Sort);
         Assert.Equal(3, query.Sort.Length);
 
-        Assert.Equal("Name", query.Sort[0].Property);
+        Assert.Equal("name", query.Sort[0].Property);
         Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
 
-        Assert.Equal("Age", query.Sort[1].Property);
+        Assert.Equal("age", query.Sort[1].Property);
         Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
 
-        Assert.Equal("CreatedDate", query.Sort[2].Property);
+        Assert.Equal("createdDate", query.Sort[2].Property);
         Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[2].Direction);
     }
 
@@ -365,11 +365,11 @@ public class PagedListQueryTests
         Assert.Equal(pageNumber, query.PageNumber);
 
         Assert.Equal(2, query.Filter.Length);
-        Assert.Equal("Name", query.Filter[0].Property);
-        Assert.Equal("Age", query.Filter[1].Property);
+        Assert.Equal("name", query.Filter[0].Property);
+        Assert.Equal("age", query.Filter[1].Property);
 
         Assert.Equal(2, query.Sort.Length);
-        Assert.Equal("Name", query.Sort[0].Property);
+        Assert.Equal("name", query.Sort[0].Property);
         Assert.Equal(PagedListQuerySortDirection.Asc, query.Sort[0].Direction);
         Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
 

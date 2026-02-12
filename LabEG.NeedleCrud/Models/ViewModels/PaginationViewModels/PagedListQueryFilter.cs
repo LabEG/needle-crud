@@ -64,8 +64,7 @@ public struct PagedListQueryFilter
             throw new NeedleCrudException($"Invalid filter format. Value is required. Filter: '{filterItem}'");
         }
 
-        Property = string.Concat(char.ToUpperInvariant(property[0]).ToString(), property.Slice(1).ToString());
-
+        Property = property.ToString();
         Method = ParseFilterMethod(method.ToString());
         Value = HttpUtility.UrlDecode(value.ToString());
     }

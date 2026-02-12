@@ -44,7 +44,7 @@ public struct PagedListQuerySort
             throw new NeedleCrudException($"Invalid sort format. Direction (asc/desc) is required. Sort: '{sortItem}'");
         }
 
-        Property = string.Concat(char.ToUpperInvariant(property[0]).ToString(), property.Slice(1).ToString());
+        Property = property.ToString();
 
         if (direction.Equals("asc", StringComparison.OrdinalIgnoreCase))
         {
