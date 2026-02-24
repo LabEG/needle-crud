@@ -1,0 +1,55 @@
+name: Generate Changelog
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  changelog:
+    name: Generate Changelog and Bump Version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history required for Versionize to analyze all commits
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install dotnet-versionize
+        run: dotnet tool install --global dotnet-versionize
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Run Versionize
+        id: versionize
+        run: |
+          dotnet-versionize \
+            --changelog-all \
+            --exit-insignificant-commits \
+            --commit-suffix "[skip ci]"
+        continue-on-error: true
+
+      - name: No significant commits found
+        if: steps.versionize.outcome != 'success'
+        run: echo "No conventional commits that trigger a version bump were found. Skipping."
+
+      - name: Push changelog and version tag
+        if: steps.versionize.outcome == 'success'
+        run: git push --follow-tags origin main
