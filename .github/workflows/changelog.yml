@@ -29,8 +29,8 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Install dotnet-versionize
-        run: dotnet tool install --global dotnet-versionize
+      - name: Install versionize
+        run: dotnet tool install --global versionize
 
       - name: Configure Git identity
         run: |
@@ -40,7 +40,7 @@ jobs:
       - name: Run Versionize
         id: versionize
         run: |
-          dotnet-versionize \
+          versionize \
             --changelog-all \
             --exit-insignificant-commits \
             --commit-suffix "[skip ci]"
