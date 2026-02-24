@@ -15,6 +15,21 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Dependabot does not understand MSBuild TargetFramework conditions, so it
+    # may try to upgrade packages beyond the version compatible with the oldest
+    # targeted framework (net8.0). The ignore rules below pin each
+    # framework-versioned package to its compatible major version ceiling so
+    # Dependabot only proposes minor/patch updates within the allowed range.
+    ignore:
+      # Microsoft.EntityFrameworkCore.InMemory: keep 8.x for net8.0 target
+      - dependency-name: "Microsoft.EntityFrameworkCore.InMemory"
+        versions: [">=9.0.0"]
+      # Npgsql.EntityFrameworkCore.PostgreSQL: keep 8.x for net8.0 target
+      - dependency-name: "Npgsql.EntityFrameworkCore.PostgreSQL"
+        versions: [">=9.0.0"]
+      # Microsoft.EntityFrameworkCore: keep 8.x for net8.0 target
+      - dependency-name: "Microsoft.EntityFrameworkCore"
+        versions: [">=9.0.0"]
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
