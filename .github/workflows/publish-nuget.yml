@@ -1,14 +1,11 @@
 name: Publish NuGet Package
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 12 4 1,4,7,10 *'  # 4st day of Jan/Apr/Jul/Oct at 12:00 UTC (quarterly)
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Package version to publish'
-        required: true
-        type: string
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
@@ -46,15 +43,8 @@ jobs:
         run: dotnet pack LabEG.NeedleCrud/LabEG.NeedleCrud.csproj -c Release -o ./nupkg --no-build
 
       - name: Publish to NuGet.org
-        run: dotnet nuget push ./nupkg/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push ./nupkg/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
 
       - name: Publish symbols to NuGet.org
-        run: dotnet nuget push ./nupkg/*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
-        continue-on-error: true
+        run: dotnet nuget push ./nupkg/*.snupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuget-packages
-          path: ./nupkg/*.nupkg
-          retention-days: 30
