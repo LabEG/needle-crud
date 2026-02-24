@@ -187,6 +187,98 @@ CrudDbService<TContext, T, TId>   ← Business logic
 CrudDbRepository<TContext, T, TId> ← Data access with EF Core
 ```
 
+## 🔒 Security
+
+NeedleCrud exposes all CRUD operations automatically. Use standard ASP.NET Core mechanisms to protect them — the library does not interfere with the auth pipeline.
+
+### Rate Limiting
+
+Limit how many requests a single client can make using the built-in .NET rate limiter (no extra packages needed):
+
+```csharp
+// Program.cs
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("api", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 100;   // 100 req/min per client
+        opt.QueueLimit = 0;
+    });
+
+    options.OnRejected = async (context, ct) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests.", ct);
+    };
+});
+
+// ...
+app.UseRateLimiter();
+```
+
+You can implement this policy yourself — use a fixed-window, sliding-window, token-bucket, or concurrency limiter depending on your needs. See the [official docs](https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit) for all available options.
+
+### Authentication & Authorization
+
+NeedleCrud controllers are plain ASP.NET Core controllers — apply `[Authorize]` just like any other controller:
+
+```csharp
+// Require any authenticated user
+[Authorize]
+[Route("api/books")]
+public class BooksController(ICrudDbService<MyDbContext, Book, Guid> service)
+    : CrudController<Book, Guid>(service) { }
+
+// Require a specific role
+[Authorize(Roles = "Admin,Librarian")]
+[Route("api/loans")]
+public class LoansController(ICrudDbService<MyDbContext, Loan, Guid> service)
+    : CrudController<Loan, Guid>(service) { }
+
+// Named authorization policy
+[Authorize(Policy = "LibraryStaff")]
+[Route("api/users")]
+public class UsersController(ICrudDbService<MyDbContext, User, Guid> service)
+    : CrudController<User, Guid>(service) { }
+```
+
+Mix anonymous reads with protected writes by overriding individual actions:
+
+```csharp
+[Authorize]
+[Route("api/books")]
+public class BooksController(ICrudDbService<MyDbContext, Book, Guid> service)
+    : CrudController<Book, Guid>(service)
+{
+    [AllowAnonymous]
+    public override Task<Book[]> GetAll() => base.GetAll();
+
+    [AllowAnonymous]
+    public override Task<Book> GetById([FromRoute] Guid id) => base.GetById(id);
+
+    [AllowAnonymous]
+    public override Task<PagedList<Book>> GetPaged([FromQuery] PagedListQuery query)
+        => base.GetPaged(query);
+
+    // Create / Update / Delete inherit [Authorize] from the class
+}
+```
+
+### Public APIs — Quick Reference
+
+| Concern | Recommended approach |
+|---------|----------------------|
+| Unauthenticated access | `[Authorize]` on controller / action |
+| Role-based access | `[Authorize(Roles = "...")]` |
+| Policy-based access | `[Authorize(Policy = "...")]` |
+| Brute-force / DDoS | `AddRateLimiter()` + `app.UseRateLimiter()` |
+| Large data exports | Enforce `pageSize` limit in a custom service |
+| HTTPS | `app.UseHttpsRedirection()` |
+| CORS | `AddCors()` + `app.UseCors()` |
+
+> **Tip:** See `LabEG.NeedleCrud.Sample/Program.cs` for ready-to-uncomment examples of rate limiting and JWT Bearer authentication.
+
 ## Performance
 
 - **Expression Trees** - Compiled queries for filters and sorting

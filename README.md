@@ -326,6 +326,136 @@ NeedleCrud follows a clean layered architecture:
 
 ---
 
+## 🔒 Security
+
+NeedleCrud exposes all CRUD operations automatically, which is powerful — and requires you to think about access control from the start. Below are the recommended patterns.
+
+### Rate Limiting
+
+Protect your API from abuse by adding a fixed-window rate limiter (built into .NET 7+). No extra NuGet packages are needed.
+
+> **Note:** Rate limiting is **not** part of NeedleCrud itself. You add it at the application level using standard ASP.NET Core middleware, which is the correct approach — this keeps the library small and gives you full control over the policy.
+
+```csharp
+// Program.cs — register rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("api", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 100;            // max 100 requests per minute per client
+        opt.QueueLimit = 0;
+    });
+
+    options.OnRejected = async (context, ct) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Try again later.", ct);
+    };
+});
+
+// ...
+
+// Program.cs — add to pipeline
+app.UseRateLimiter();
+```
+
+Apply the policy to all NeedleCrud controllers at once by adding an `[EnableRateLimiting]` attribute to a custom base controller, or globally via a `IApplicationBuilder` convention. You can also use a **sliding-window**, **token-bucket**, or **concurrency** limiter depending on your traffic patterns — see the [official docs](https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit).
+
+### Authentication & Authorization
+
+NeedleCrud controllers are plain ASP.NET Core controllers, so every built-in authentication/authorization mechanism works without any NeedleCrud-specific configuration.
+
+**Step 1 — Register JWT Bearer authentication** (or any other scheme):
+
+```csharp
+// Program.cs
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+            ValidAudience            = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// ...
+
+app.UseAuthentication();
+app.UseAuthorization();
+```
+
+**Step 2 — Protect individual controllers:**
+
+```csharp
+// Require any authenticated user
+[Authorize]
+[Route("api/books")]
+public class BooksController(ICrudDbService<LibraryDbContext, Book, Guid> service)
+    : CrudController<Book, Guid>(service) { }
+
+// Require a specific role
+[Authorize(Roles = "Admin,Librarian")]
+[Route("api/loans")]
+public class LoansController(ICrudDbService<LibraryDbContext, Loan, Guid> service)
+    : CrudController<Loan, Guid>(service) { }
+
+// Named policy (policy defined in AddAuthorization())
+[Authorize(Policy = "LibraryStaff")]
+[Route("api/users")]
+public class UsersController(ICrudDbService<LibraryDbContext, User, Guid> service)
+    : CrudController<User, Guid>(service) { }
+```
+
+**Step 3 — Mix anonymous read access with protected writes:**
+
+```csharp
+[Authorize]                     // default: auth required
+[Route("api/books")]
+public class BooksController(ICrudDbService<LibraryDbContext, Book, Guid> service)
+    : CrudController<Book, Guid>(service)
+{
+    // Override read operations to allow anonymous access
+    [AllowAnonymous]
+    public override Task<Book[]> GetAll() => base.GetAll();
+
+    [AllowAnonymous]
+    public override Task<Book> GetById([FromRoute] Guid id) => base.GetById(id);
+
+    [AllowAnonymous]
+    public override Task<PagedList<Book>> GetPaged([FromQuery] PagedListQuery query)
+        => base.GetPaged(query);
+
+    // Create / Update / Delete inherit [Authorize] from the class
+}
+```
+
+### Public APIs — What to Protect
+
+| Concern | Recommended approach |
+|---------|----------------------|
+| Unauthenticated access | `[Authorize]` on controller / action |
+| Role-based access | `[Authorize(Roles = "...")]` |
+| Policy-based access | `[Authorize(Policy = "...")]` + `AddAuthorization()` |
+| Brute-force / DDoS | `AddRateLimiter()` + `app.UseRateLimiter()` |
+| Large data exports | Enforce `pageSize` limit in service/repository |
+| Injection via filter values | NeedleCrud validates property names via reflection |
+| HTTPS | `app.UseHttpsRedirection()` (already in template) |
+| CORS | `AddCors()` + `app.UseCors()` — restrict allowed origins |
+
+> **See the sample project** (`LabEG.NeedleCrud.Sample/Program.cs`) for ready-to-uncomment code snippets for both rate limiting and JWT authentication.
+
+---
+
 ## ⚙️ Advanced Configuration
 
 ### Custom Controller
