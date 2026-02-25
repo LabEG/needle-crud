@@ -153,12 +153,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
             ref readonly PagedListQueryFilter filter = ref filters[i];
 
             ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-            Expression? memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
-
-            if (memberExpression is null)
-            {
-                continue;
-            }
+            Expression memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
 
             Expression body = filter.Method switch
             {
@@ -221,12 +216,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
             ref readonly PagedListQuerySort sort = ref sorts[i];
 
             ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
-            Expression? memberExpression = GetMemberExpression(sort.Property, param, typeof(TEntity));
-
-            if (memberExpression is not MemberExpression)
-            {
-                continue;
-            }
+            Expression memberExpression = GetMemberExpression(sort.Property, param, typeof(TEntity));
 
             LambdaExpression selector = Expression.Lambda(memberExpression, param);
             string methodName = sort.Direction == PagedListQuerySortDirection.Asc
@@ -249,14 +239,28 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <summary>
-    /// Extracts navigation property paths from the graph JSON object for eager loading
+    /// Extracts navigation property paths from the graph JSON object for eager loading.
+    /// Each key is validated against the public properties of the current entity type —
+    /// any key that does not correspond to a real public property throws
+    /// <see cref="NeedleCrudException"/>, which prevents arbitrary strings
+    /// from reaching the EF Core SQL generator (SQL-injection protection).
     /// </summary>
     /// <param name="graph">JSON object representing the graph structure</param>
     /// <param name="listOfProps">List of property paths (used for recursion)</param>
     /// <param name="previosProp">Previous property path (used for recursion)</param>
+    /// <param name="currentType">
+    /// The CLR type whose public properties are used for validation at this level.
+    /// Defaults to <typeparamref name="TEntity"/> on the first call.
+    /// </param>
     /// <returns>List of navigation property paths</returns>
-    protected IList<string> ExtractIncludes(JsonObject graph, List<string>? listOfProps = null, string? previosProp = null)
+    /// <exception cref="NeedleCrudException">
+    /// Thrown when a key in <paramref name="graph"/> does not match any public property
+    /// of the corresponding entity type.
+    /// </exception>
+    protected IList<string> ExtractIncludes(JsonObject graph, List<string>? listOfProps = null, string? previosProp = null, Type? currentType = null)
     {
+        currentType ??= typeof(TEntity);
+
         // Pre-allocate capacity to avoid multiple resizes (estimate: graph.Count * 2 for nested depth)
 #pragma warning disable IDE0028 // Simplify collection initialization
         listOfProps ??= new List<string>(capacity: graph.Count * 2);
@@ -266,12 +270,17 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         {
             string camelKey = ToCamelCase(prop.Key);
 
+            // Validate that the property actually exists as a public property on the current type.
+            // This is the SQL-injection guard: only real property names can ever reach EF Core.
+            PropertyInfo propertyInfo = currentType.GetProperty(camelKey, BindingFlags.Public | BindingFlags.Instance) ??
+                throw new NeedleCrudException($"Property '{camelKey}' does not exist on type '{currentType.Name}'.");
+
             // Use pattern matching to check if Value is a JsonObject (nested graph)
             if (prop.Value is JsonObject nestedObject)
             {
                 // Use string interpolation - faster than concatenation for 2-3 parts
                 string deepProp = previosProp is not null ? $"{previosProp}.{camelKey}" : camelKey;
-                ExtractIncludes(nestedObject, listOfProps, deepProp);
+                ExtractIncludes(nestedObject, listOfProps, deepProp, propertyInfo.PropertyType);
             }
             else if (prop.Value is null)
             {
@@ -283,13 +292,20 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <summary>
-    /// Gets a member expression for a nested property path
+    /// Gets a member expression for a nested property path.
+    /// Each segment of the path is validated against the public properties of the
+    /// corresponding type — throws <see cref="NeedleCrudException"/> if a segment
+    /// does not match any public property (SQL-injection protection).
     /// </summary>
     /// <param name="nestedProperty">Nested property path (e.g., "Author.Name")</param>
     /// <param name="param">Parameter expression</param>
     /// <param name="entityType">Entity type</param>
-    /// <returns>Member expression or null if property not found</returns>
-    protected Expression? GetMemberExpression(string nestedProperty, ParameterExpression param, Type entityType)
+    /// <returns>Member expression for the resolved property path</returns>
+    /// <exception cref="NeedleCrudException">
+    /// Thrown when any segment in <paramref name="nestedProperty"/> does not correspond
+    /// to a public property of the current type in the path.
+    /// </exception>
+    protected Expression GetMemberExpression(string nestedProperty, ParameterExpression param, Type entityType)
     {
         // https://stackoverflow.com/questions/16208214/construct-lambdaexpression-for-nested-property-from-string
 
@@ -300,7 +316,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         for (int i = 0; i < members.Length; i++)
         {
             string propName = ToCamelCase(members[i]);
-            PropertyInfo? sortableProperty = elementType.GetProperty(propName);
+            PropertyInfo? sortableProperty = elementType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance);
 
             if (sortableProperty is not null)
             {
@@ -309,7 +325,8 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
             }
             else
             {
-                return null;
+                throw new NeedleCrudException(
+                    $"Property '{propName}' does not exist on type '{elementType.Name}'.");
             }
         }
 
