@@ -1,7 +1,7 @@
-using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace LabEG.NeedleCrud.Benchmarks.BLL;
+namespace LabEG.NeedleCrud.TestsFixtures.DAL;
 
 /// <summary>
 /// Database provider type

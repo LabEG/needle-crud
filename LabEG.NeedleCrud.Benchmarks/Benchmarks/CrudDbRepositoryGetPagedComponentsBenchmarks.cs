@@ -1,12 +1,12 @@
 using System.Linq.Expressions;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
-using LabEG.NeedleCrud.Benchmarks.BLL;
-using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
-using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
+using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.DAL;
+using LabEG.NeedleCrud.TestsFixtures.Fixtures;
 using Microsoft.EntityFrameworkCore;
 
 namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
@@ -297,7 +297,7 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
             return AddSort(queryableData, sorts);
         }
 
-        public IList<string> PublicExtractIncludes(JsonObject graph)
+        public IList<string> PublicExtractIncludes(JsonDocument graph)
         {
             return ExtractIncludes(graph);
         }

@@ -1,9 +1,9 @@
-using LabEG.NeedleCrud.Benchmarks.BLL;
-using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
-using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
 using LabEG.NeedleCrud.Settings;
+using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.DAL;
+using LabEG.NeedleCrud.TestsFixtures.Fixtures;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace LabEG.NeedleCrud.Tests.Repositories;

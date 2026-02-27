@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace LabEG.NeedleCrud.Repositories;
 
@@ -69,9 +69,9 @@ public interface ICrudRepository<TEntity, TId>
     /// Retrieves a single entity by its identifier with related entities loaded based on the graph expression.
     /// </summary>
     /// <param name="id">The identifier of the entity to retrieve.</param>
-    /// <param name="graph">The JSON object graph expression specifying which related entities to include (eager loading). Must not be null.</param>
+    /// <param name="graph">The JSON document graph expression specifying which related entities to include (eager loading). Must not be null.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the entity with its specified related entities loaded.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="graph"/> is null.</exception>
     /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
-    Task<TEntity> GetGraph(TId id, JsonObject graph);
+    Task<TEntity> GetGraph(TId id, JsonDocument graph);
 }

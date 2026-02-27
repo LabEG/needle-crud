@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace LabEG.NeedleCrud.Tests.Models.ViewModels.PaginationViewModels;
 
@@ -269,9 +269,8 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
-        Assert.IsType<JsonObject>(query.Graph);
-        Assert.True(query.Graph.ContainsKey("user"));
-        Assert.True(query.Graph.ContainsKey("items"));
+        Assert.True(query.Graph.RootElement.TryGetProperty("user", out _));
+        Assert.True(query.Graph.RootElement.TryGetProperty("items", out _));
     }
 
     [Fact]
@@ -285,11 +284,8 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
-        Assert.True(query.Graph.ContainsKey("user"));
-        Assert.NotNull(query.Graph["user"]);
-        JsonObject? userGraph = query.Graph["user"]?.AsObject();
-        Assert.NotNull(userGraph);
-        Assert.True(userGraph.ContainsKey("profile"));
+        Assert.True(query.Graph.RootElement.TryGetProperty("user", out JsonElement userElement));
+        Assert.True(userElement.TryGetProperty("profile", out _));
     }
 
     [Fact]
@@ -303,7 +299,7 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
-        Assert.Empty(query.Graph);
+        Assert.True(query.Graph.RootElement.EnumerateObject().All(p => false)); // Check if object is empty
     }
 
     #endregion
@@ -316,10 +312,8 @@ public class PagedListQueryTests
         // Arrange
         const string graph = "{invalid json}";
 
-        // Act - should not throw
+        // Act & Assert - should not throw, Graph should be null
         PagedListQuery query = new(null, null, null, null, graph);
-
-        // Assert - Graph should be null
         Assert.Null(query.Graph);
     }
 
@@ -374,7 +368,7 @@ public class PagedListQueryTests
         Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
 
         Assert.NotNull(query.Graph);
-        Assert.True(query.Graph.ContainsKey("profile"));
+        Assert.True(query.Graph.RootElement.TryGetProperty("profile", out _));
     }
 
     [Fact]

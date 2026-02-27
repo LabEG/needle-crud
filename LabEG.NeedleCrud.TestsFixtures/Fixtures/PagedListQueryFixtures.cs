@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 
-namespace LabEG.NeedleCrud.Benchmarks.Fixtures;
+namespace LabEG.NeedleCrud.TestsFixtures.Fixtures;
 
 /// <summary>
 /// Provides standard PagedListQuery fixtures for benchmarks and tests

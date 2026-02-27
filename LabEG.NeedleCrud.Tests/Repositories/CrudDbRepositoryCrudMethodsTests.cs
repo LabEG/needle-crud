@@ -1,8 +1,8 @@
-using LabEG.NeedleCrud.Benchmarks.BLL;
-using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
-using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Repositories;
+using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.DAL;
+using LabEG.NeedleCrud.TestsFixtures.Fixtures;
 using Microsoft.EntityFrameworkCore;
 
 namespace LabEG.NeedleCrud.Tests.Repositories;

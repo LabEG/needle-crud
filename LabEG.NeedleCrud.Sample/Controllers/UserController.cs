@@ -1,7 +1,7 @@
-using LabEG.NeedleCrud.Benchmarks.BLL;
-using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 using LabEG.NeedleCrud.Controllers;
 using LabEG.NeedleCrud.Services;
+using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.DAL;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabEG.NeedleCrud.Sample.Controllers;

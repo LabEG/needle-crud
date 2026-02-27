@@ -2,12 +2,12 @@ using LabEG.NeedleCrud.Infrastructure;
 using LabEG.NeedleCrud.Repositories;
 using LabEG.NeedleCrud.Services;
 using LabEG.NeedleCrud.Settings;
-using LabEG.NeedleCrud.Benchmarks.BLL;
-using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using LabEG.NeedleCrud.TestsFixtures.Fixtures;
+using LabEG.NeedleCrud.TestsFixtures.DAL;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

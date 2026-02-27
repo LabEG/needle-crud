@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Settings;
@@ -134,7 +134,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph)
+    public virtual async Task<TEntity> GetGraph(TId id, JsonDocument graph)
     {
         IQueryable<TEntity> graphQuery = DBContext.Set<TEntity>();
 
@@ -250,13 +250,13 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <summary>
-    /// Extracts navigation property paths from the graph JSON object for eager loading.
+    /// Extracts navigation property paths from the graph JSON document for eager loading.
     /// Each key is validated against the public properties of the current entity type —
     /// any key that does not correspond to a real public property throws
     /// <see cref="NeedleCrudException"/>, which prevents arbitrary strings
     /// from reaching the EF Core SQL generator (SQL-injection protection).
     /// </summary>
-    /// <param name="graph">JSON object representing the graph structure</param>
+    /// <param name="graph">JSON document representing the graph structure</param>
     /// <param name="listOfProps">List of property paths (used for recursion)</param>
     /// <param name="previosProp">Previous property path (used for recursion)</param>
     /// <param name="currentType">
@@ -268,35 +268,35 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     /// Thrown when a key in <paramref name="graph"/> does not match any public property
     /// of the corresponding entity type.
     /// </exception>
-    protected IList<string> ExtractIncludes(JsonObject graph, List<string>? listOfProps = null, string? previosProp = null, Type? currentType = null)
+    protected IList<string> ExtractIncludes(JsonDocument graph, List<string>? listOfProps = null, string? previosProp = null, Type? currentType = null)
     {
         currentType ??= typeof(TEntity);
 
-        // Pre-allocate capacity to avoid multiple resizes (estimate: graph.Count * 2 for nested depth)
+        // Pre-allocate capacity to avoid multiple resizes (estimate: graph.RootElement.EnumerateObject().Count() * 2 for nested depth)
 #pragma warning disable IDE0028 // Simplify collection initialization
-        listOfProps ??= new List<string>(capacity: graph.Count * 2);
+        listOfProps ??= new List<string>(capacity: graph.RootElement.EnumerateObject().Count() * 2);
 #pragma warning restore IDE0028 // Simplify collection initialization
 
-        foreach (KeyValuePair<string, JsonNode?> prop in graph)
+        foreach (JsonProperty property in graph.RootElement.EnumerateObject())
         {
-            string camelKey = ToCamelCase(prop.Key);
+            string camelKey = ToCamelCase(property.Name);
 
             // Validate that the property actually exists as a public property on the current type.
             // This is the SQL-injection guard: only real property names can ever reach EF Core.
             PropertyInfo propertyInfo = currentType.GetProperty(camelKey, BindingFlags.Public | BindingFlags.Instance) ??
                 throw new NeedleCrudException($"Property '{camelKey}' does not exist on type '{currentType.Name}'.");
 
-            // Use pattern matching to check if Value is a JsonObject (nested graph)
-            if (prop.Value is JsonObject nestedObject)
+            // Check if Value is an object (nested graph)
+            if (property.Value.ValueKind == JsonValueKind.Object)
             {
                 // Use string interpolation - faster than concatenation for 2-3 parts
                 string deepProp = previosProp is not null ? $"{previosProp}.{camelKey}" : camelKey;
-                ExtractIncludes(nestedObject, listOfProps, deepProp, propertyInfo.PropertyType);
+                ExtractIncludes(JsonDocument.Parse(property.Value.GetRawText()), listOfProps, deepProp, propertyInfo.PropertyType);
             }
-            else if (prop.Value is null)
+            else if (property.Value.ValueKind == JsonValueKind.Null)
             {
                 listOfProps.Add(previosProp is not null ? $"{previosProp}.{camelKey}" : camelKey);
-            } // else ignore JsonValue nodes
+            } // else ignore other JsonValue nodes
         }
 
         return listOfProps;

@@ -1,9 +1,9 @@
 using BenchmarkDotNet.Attributes;
-using LabEG.NeedleCrud.Benchmarks.BLL;
-using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
-using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
+using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.DAL;
+using LabEG.NeedleCrud.TestsFixtures.Fixtures;
 
 namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
 

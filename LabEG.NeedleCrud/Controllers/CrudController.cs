@@ -3,7 +3,7 @@ using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace LabEG.NeedleCrud.Controllers;
 
@@ -149,7 +149,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// Get entity by ID with related entities (eager loading)
     /// </summary>
     /// <param name="id">Entity ID</param>
-    /// <param name="graph">JSON object defining related entities to include.
+    /// <param name="graph">JSON document defining related entities to include.
     /// Example: {"Author":null,"Category":null} to load Author and Category relations</param>
     /// <returns>Entity with loaded related data</returns>
     /// <response code="200">Returns the entity with related data</response>
@@ -168,10 +168,8 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
             throw new NeedleCrudException("Parameter 'graph' cannot be null or empty");
         }
 
-        JsonObject graphObject = JsonNode.Parse(graph)?.AsObject() ??
-            throw new NeedleCrudException("Invalid JSON in 'graph' parameter");
-
-        TEntity graphResult = await Service.GetGraph(id, graphObject);
+        JsonDocument graphDocument = JsonDocument.Parse(graph);
+        TEntity graphResult = await Service.GetGraph(id, graphDocument);
 
         return graphResult;
     }

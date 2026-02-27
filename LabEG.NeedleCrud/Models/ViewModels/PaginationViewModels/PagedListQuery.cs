@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Settings;
@@ -32,9 +33,9 @@ public class PagedListQuery
     public PagedListQuerySort[] Sort { get; init; } = [];
 
     /// <summary>
-    /// Gets or sets the graph expression as a JSON object for loading related entities (eager loading).
+    /// Gets or sets the graph expression as a JSON document for loading related entities (eager loading).
     /// </summary>
-    public JsonObject? Graph { get; set; } = null;
+    public JsonDocument? Graph { get; set; } = null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PagedListQuery"/> class with specified pagination, filtering, sorting, and graph loading parameters.
@@ -172,11 +173,12 @@ public class PagedListQuery
     }
 
     /// <summary>
-    /// Parses a JSON string into a <see cref="JsonObject"/> for graph loading configuration.
+    /// Parses a JSON string into a <see cref="JsonDocument"/> for graph loading configuration with depth validation.
     /// </summary>
     /// <param name="graph">A JSON string representing the graph of related entities to load.</param>
-    /// <returns>A parsed <see cref="JsonObject"/> if the input is valid JSON, otherwise null.</returns>
-    private static JsonObject? ParseGraph(string? graph, NeedleCrudSettings? settings)
+    /// <param name="settings">The NeedleCrudSettings for validation and limits.</param>
+    /// <returns>A parsed <see cref="JsonDocument"/> if the input is valid JSON and within depth limits, otherwise null.</returns>
+    public static JsonDocument? ParseGraph(string? graph, NeedleCrudSettings settings)
     {
         if (graph is not string graphString || string.IsNullOrEmpty(graphString))
         {
@@ -185,9 +187,21 @@ public class PagedListQuery
 
         try
         {
-            return JsonNode.Parse(graphString)?.AsObject();
+            var documentOptions = new JsonDocumentOptions
+            {
+                MaxDepth = settings?.MaxGraphDepth ?? 16
+            };
+
+            var jsonDoc = JsonDocument.Parse(graphString, documentOptions);
+            if (jsonDoc.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                jsonDoc.Dispose();
+                return null;
+            }
+
+            return jsonDoc;
         }
-        catch (System.Text.Json.JsonException)
+        catch (JsonException)
         {
             return null;
         }

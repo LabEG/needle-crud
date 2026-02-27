@@ -1,8 +1,8 @@
 using Bogus;
-using LabEG.NeedleCrud.Benchmarks.BLL;
-using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
+using LabEG.NeedleCrud.TestsFixtures.DAL;
 
-namespace LabEG.NeedleCrud.Benchmarks.Fixtures;
+namespace LabEG.NeedleCrud.TestsFixtures.Fixtures;
 
 /// <summary>
 /// Generator for creating test data for benchmarks
