@@ -1,8 +1,10 @@
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
+using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace LabEG.NeedleCrud.Controllers;
@@ -33,13 +35,17 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// </summary>
     protected ICrudService<TEntity, TId> Service { get; }
 
+    private readonly NeedleCrudSettings _settings;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CrudController{TEntity, TId}"/> class.
     /// </summary>
     /// <param name="service">The CRUD service instance to use for entity operations.</param>
-    public CrudController(ICrudService<TEntity, TId> service)
+    /// <param name="settings">The NeedleCrud settings.</param>
+    public CrudController(ICrudService<TEntity, TId> service, IOptions<NeedleCrudSettings> settings)
     {
         Service = service;
+        _settings = settings.Value;
     }
 
     /// <summary>
@@ -139,7 +145,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
         [FromQuery] string? graph
     )
     {
-        PagedListQuery query = new(pageSize, pageNumber, filter, sort, graph);
+        PagedListQuery query = new(pageSize, pageNumber, filter, sort, graph, _settings);
         PagedList<TEntity> pagedResult = await Service.GetPaged(query);
 
         return pagedResult;

@@ -1,8 +1,10 @@
 using LabEG.NeedleCrud.Controllers;
 using LabEG.NeedleCrud.Services;
+using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
 using LabEG.NeedleCrud.TestsFixtures.DAL;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace LabEG.NeedleCrud.Sample.Controllers;
 
@@ -18,6 +20,9 @@ namespace LabEG.NeedleCrud.Sample.Controllers;
 /// - Eager loading of related User and Book information
 /// </remarks>
 [Route("api/loans")]
-public class LoansController(ICrudDbService<LibraryDbContext, Loan, Guid> service) : CrudController<Loan, Guid>(service)
+public class LoansController(
+    ICrudDbService<LibraryDbContext, Loan, Guid> service,
+    IOptions<NeedleCrudSettings> settings
+) : CrudController<Loan, Guid>(service, settings)
 {
 }
