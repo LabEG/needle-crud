@@ -4,8 +4,10 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.Exceptions;
+using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace LabEG.NeedleCrud.Repositories;
 
@@ -26,13 +28,17 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     /// </summary>
     protected TDbContext DBContext { get; }
 
+    private readonly NeedleCrudSettings _settings;
+
     /// <summary>
     /// Initializes a new instance of the repository
     /// </summary>
     /// <param name="dbContext">Entity Framework database context</param>
-    public CrudDbRepository(TDbContext dbContext)
+    /// <param name="settings">NeedleCrud settings for validation and limits</param>
+    public CrudDbRepository(TDbContext dbContext, IOptions<NeedleCrudSettings>? settings = null)
     {
         DBContext = dbContext;
+        _settings = settings?.Value ?? new NeedleCrudSettings();
     }
 
     /// <inheritdoc/>
@@ -58,7 +64,12 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     /// <inheritdoc/>
     public virtual async Task<TEntity[]> GetAll()
     {
-        return await DBContext.Set<TEntity>().ToArrayAsync();
+        // Limit the number of entities returned to prevent resource exhaustion
+        TEntity[] allEntities = await DBContext.Set<TEntity>()
+            .Take(_settings.MaxGetAllCount)
+            .ToArrayAsync();
+
+        return allEntities;
     }
 
     /// <inheritdoc/>

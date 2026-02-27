@@ -1,4 +1,6 @@
 using System.Text.Json.Nodes;
+using LabEG.NeedleCrud.Models.Exceptions;
+using LabEG.NeedleCrud.Settings;
 
 namespace LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 
@@ -44,20 +46,35 @@ public class PagedListQuery
     /// <param name="sort">A comma-separated string of sort expressions in the format: property~direction.
     /// Example: "name~asc,age~desc". Direction can be "asc" or "desc". If null or empty, default sorting is used.</param>
     /// <param name="graph">A JSON string representing the graph of related entities to load. If null or empty, no related entities are loaded.</param>
-    /// <exception cref="Exceptions.NeedleCrudException">Thrown when an unknown filter method is encountered.</exception>
+    /// <param name="settings">The NeedleCrudSettings for validation and limits. If null, default values are used.</param>
+    /// <exception cref="NeedleCrudException">Thrown when validation fails or an unknown filter method is encountered.</exception>
     public PagedListQuery(
         int? pageSize,
         int? pageNumber,
         string? filter,
         string? sort,
-        string? graph
+        string? graph,
+        NeedleCrudSettings? settings = null
     )
     {
+        settings ??= new NeedleCrudSettings();
+
+        // Validate pagination parameters early
+        if (pageSize > settings.MaxPageSize)
+        {
+            throw new NeedleCrudException($"Page size cannot exceed {settings.MaxPageSize}. Requested: {pageSize ?? PageSize}");
+        }
+
+        if (pageNumber < 1)
+        {
+            throw new NeedleCrudException($"Page number must be at least 1. Requested: {pageNumber ?? PageNumber}");
+        }
+
         PageSize = pageSize ?? PageSize;
         PageNumber = pageNumber ?? PageNumber;
-        Filter = ParseFilters(filter);
-        Sort = ParseSort(sort);
-        Graph = ParseGraph(graph);
+        Filter = ParseFilters(filter, settings);
+        Sort = ParseSort(sort, settings);
+        Graph = ParseGraph(graph, settings);
     }
 
     /// <summary>
@@ -65,7 +82,8 @@ public class PagedListQuery
     /// </summary>
     /// <param name="filter">A comma-separated string of filter expressions in the format: property~method~value.</param>
     /// <returns>An array of parsed filters, or an empty array if the input is null or empty.</returns>
-    private static PagedListQueryFilter[] ParseFilters(string? filter)
+    /// <exception cref="NeedleCrudException">Thrown when filter count exceeds MaxFilterCount.</exception>
+    private static PagedListQueryFilter[] ParseFilters(string? filter, NeedleCrudSettings settings)
     {
         if (filter is not string filterString || string.IsNullOrEmpty(filterString))
         {
@@ -75,11 +93,23 @@ public class PagedListQuery
         ReadOnlySpan<char> filterSpan = filterString.AsSpan();
         int estimatedCount = filterSpan.Count(',') + 1;
 
+        // Validate before parsing to fail fast
+        if (estimatedCount > settings.MaxFilterCount)
+        {
+            throw new NeedleCrudException($"Filter count cannot exceed {settings.MaxFilterCount}. Requested: {estimatedCount}");
+        }
+
         PagedListQueryFilter[] filters = new PagedListQueryFilter[estimatedCount];
         int count = 0;
 
         while (true)
         {
+            // Validate during parsing to catch issues early
+            if (count >= settings.MaxFilterCount)
+            {
+                throw new NeedleCrudException($"Filter count cannot exceed {settings.MaxFilterCount}. Requested: {count + 1}");
+            }
+
             int commaIndex = filterSpan.IndexOf(',');
             if (commaIndex == -1)
             {
@@ -99,7 +129,8 @@ public class PagedListQuery
     /// </summary>
     /// <param name="sort">A comma-separated string of sort expressions in the format: property~direction.</param>
     /// <returns>An array of parsed sort conditions, or an empty array if the input is null or empty.</returns>
-    private static PagedListQuerySort[] ParseSort(string? sort)
+    /// <exception cref="NeedleCrudException">Thrown when sort count exceeds MaxSortCount.</exception>
+    private static PagedListQuerySort[] ParseSort(string? sort, NeedleCrudSettings settings)
     {
         if (sort is not string sortString || string.IsNullOrEmpty(sortString))
         {
@@ -109,11 +140,23 @@ public class PagedListQuery
         ReadOnlySpan<char> sortSpan = sortString.AsSpan();
         int estimatedCount = sortSpan.Count(',') + 1;
 
+        // Validate before parsing to fail fast
+        if (estimatedCount > settings.MaxSortCount)
+        {
+            throw new NeedleCrudException($"Sort count cannot exceed {settings.MaxSortCount}. Requested: {estimatedCount}");
+        }
+
         PagedListQuerySort[] sorts = new PagedListQuerySort[estimatedCount];
         int count = 0;
 
         while (true)
         {
+            // Validate during parsing to catch issues early
+            if (count >= settings.MaxSortCount)
+            {
+                throw new NeedleCrudException($"Sort count cannot exceed {settings.MaxSortCount}. Requested: {count + 1}");
+            }
+
             int commaIndex = sortSpan.IndexOf(',');
             if (commaIndex == -1)
             {
@@ -133,7 +176,7 @@ public class PagedListQuery
     /// </summary>
     /// <param name="graph">A JSON string representing the graph of related entities to load.</param>
     /// <returns>A parsed <see cref="JsonObject"/> if the input is valid JSON, otherwise null.</returns>
-    private static JsonObject? ParseGraph(string? graph)
+    private static JsonObject? ParseGraph(string? graph, NeedleCrudSettings? settings)
     {
         if (graph is not string graphString || string.IsNullOrEmpty(graphString))
         {
@@ -149,5 +192,4 @@ public class PagedListQuery
             return null;
         }
     }
-
 }

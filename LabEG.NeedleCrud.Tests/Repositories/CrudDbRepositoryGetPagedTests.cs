@@ -3,6 +3,7 @@ using LabEG.NeedleCrud.Benchmarks.BLL.Entities;
 using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
+using LabEG.NeedleCrud.Settings;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace LabEG.NeedleCrud.Tests.Repositories;
@@ -474,12 +475,17 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
     public async Task GetPaged_LargePageSize_ShouldReturnAllElements()
     {
         // Arrange
+        var settings = new NeedleCrudSettings
+        {
+            MaxPageSize = 2000 // Allow larger page size for this test
+        };
         PagedListQuery query = new(
             pageSize: 1000,
             pageNumber: 1,
             filter: null,
             sort: null,
-            graph: null
+            graph: null,
+            settings: settings
         );
 
         // Act

@@ -1,6 +1,7 @@
 using LabEG.NeedleCrud.Infrastructure;
 using LabEG.NeedleCrud.Repositories;
 using LabEG.NeedleCrud.Services;
+using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.Benchmarks.BLL;
 using LabEG.NeedleCrud.Benchmarks.Fixtures;
 using Microsoft.AspNetCore.RateLimiting;
@@ -15,6 +16,9 @@ builder.Services.AddDbContextPool<LibraryDbContext>(options =>
 {
     options.UseInMemoryDatabase("NeedleCrudSample");
 });
+
+// Register NeedleCrud settings with configuration binding from appsettings.json
+builder.Services.Configure<NeedleCrudSettings>(builder.Configuration.GetSection("NeedleCrud"));
 
 // Register LabEG.NeedleCrud library dependencies
 builder.Services.AddScoped(typeof(ICrudDbRepository<,,>), typeof(CrudDbRepository<,,>));
