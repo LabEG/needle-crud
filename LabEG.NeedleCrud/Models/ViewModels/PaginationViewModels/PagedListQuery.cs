@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Settings;
 
@@ -82,6 +81,7 @@ public class PagedListQuery
     /// Parses a comma-separated string of filter expressions into an array of <see cref="PagedListQueryFilter"/>.
     /// </summary>
     /// <param name="filter">A comma-separated string of filter expressions in the format: property~method~value.</param>
+    /// <param name="settings">The NeedleCrudSettings for validation and limits. If null, default values are used.</param>
     /// <returns>An array of parsed filters, or an empty array if the input is null or empty.</returns>
     /// <exception cref="NeedleCrudException">Thrown when filter count exceeds MaxFilterCount.</exception>
     private static PagedListQueryFilter[] ParseFilters(string? filter, NeedleCrudSettings settings)
@@ -129,6 +129,7 @@ public class PagedListQuery
     /// Parses a comma-separated string of sort expressions into an array of <see cref="PagedListQuerySort"/>.
     /// </summary>
     /// <param name="sort">A comma-separated string of sort expressions in the format: property~direction.</param>
+    /// <param name="settings">The NeedleCrudSettings for validation and limits. If null, default values are used.</param>
     /// <returns>An array of parsed sort conditions, or an empty array if the input is null or empty.</returns>
     /// <exception cref="NeedleCrudException">Thrown when sort count exceeds MaxSortCount.</exception>
     private static PagedListQuerySort[] ParseSort(string? sort, NeedleCrudSettings settings)

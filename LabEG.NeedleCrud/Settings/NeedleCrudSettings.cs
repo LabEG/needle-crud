@@ -12,12 +12,12 @@ namespace LabEG.NeedleCrud.Settings;
 /// <para>
 /// Register the settings through the ASP.NET Core options system:
 /// <code>
-/// builder.Services.Configure<NeedleCrudSettings>(
+/// builder.Services.Configure&lt;NeedleCrudSettings&gt;(
 ///     builder.Configuration.GetSection("NeedleCrud"));
 /// </code>
 /// or configure them directly in code:
 /// <code>
-/// builder.Services.Configure<NeedleCrudSettings>(options =>
+/// builder.Services.Configure&lt;NeedleCrudSettings&gt;(options =>
 /// {
 ///     options.MaxGetAllCount  = 500;
 ///     options.MaxPageSize     = 50;
