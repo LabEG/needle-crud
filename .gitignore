@@ -50,9 +50,9 @@ nunit-*.xml
 [Rr]eleasePS/
 dlldata.c
 
-# Benchmark Results
+# Benchmark Results - ignore all files except .md report files
 BenchmarkDotNet.Artifacts/
-
+!**/BenchmarkDotNet.Artifacts/results/*.md
 # .NET
 project.lock.json
 project.fragment.lock.json

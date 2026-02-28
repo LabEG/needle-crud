@@ -7,7 +7,7 @@ A project for measuring the performance of NeedleCrud library components using [
 ### Running All Benchmarks
 
 ```bash
-dotnet run -c Release
+dotnet run -c Release --framework net10.0
 ```
 
 ### Running Specific Benchmark
@@ -23,7 +23,7 @@ dotnet run -c Release -- --filter *GetPagedComponents*
 
 For InMemory benchmarks:
 ```bash
-dotnet run -c Release -- --filter *CrudDbRepository* --runtimes net8.0
+dotnet run -c Release -- --filter *CrudDbRepository* --framewor net10.0
 ```
 
 For PostgreSQL benchmarks (requires a running container):
