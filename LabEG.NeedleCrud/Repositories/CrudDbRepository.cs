@@ -281,10 +281,17 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         {
             string camelKey = ToCamelCase(property.Name);
 
+            // Handle collection types - get the generic argument type for ICollection<T>
+            Type propertyType = currentType;
+            if (currentType.IsGenericType && currentType.GetGenericTypeDefinition() == typeof(ICollection<>))
+            {
+                propertyType = currentType.GetGenericArguments()[0];
+            }
+
             // Validate that the property actually exists as a public property on the current type.
             // This is the SQL-injection guard: only real property names can ever reach EF Core.
-            PropertyInfo propertyInfo = currentType.GetProperty(camelKey, BindingFlags.Public | BindingFlags.Instance) ??
-                throw new NeedleCrudException($"Property '{camelKey}' does not exist on type '{currentType.Name}'.");
+            PropertyInfo propertyInfo = propertyType.GetProperty(camelKey, BindingFlags.Public | BindingFlags.Instance) ??
+                throw new NeedleCrudException($"Property '{camelKey}' does not exist on type '{propertyType.Name}'.");
 
             // Check if Value is an object (nested graph)
             if (property.Value.ValueKind == JsonValueKind.Object)

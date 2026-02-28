@@ -1,16 +1,16 @@
 # LabEG.NeedleCrud.Benchmarks
 
-Проект для измерения производительности компонентов библиотеки NeedleCrud с использованием [BenchmarkDotNet](https://benchmarkdotnet.org/).
+A project for measuring the performance of NeedleCrud library components using [BenchmarkDotNet](https://benchmarkdotnet.org/).
 
-## Запуск бенчмарков
+## Running Benchmarks
 
-### Запуск всех бенчмарков
+### Running All Benchmarks
 
 ```bash
 dotnet run -c Release
 ```
 
-### Запуск конкретного бенчмарка
+### Running Specific Benchmark
 
 ```bash
 dotnet run -c Release -- --filter *PagedListQuery*
@@ -19,16 +19,16 @@ dotnet run -c Release -- --filter *GetPaged*
 dotnet run -c Release -- --filter *GetPagedComponents*
 ```
 
-### Запуск CrudDbRepository бенчмарков
+### Running CrudDbRepository Benchmarks
 
-Для бенчмарков с InMemory:
+For InMemory benchmarks:
 ```bash
 dotnet run -c Release -- --filter *CrudDbRepository* --runtimes net8.0
 ```
 
-Для бенчмарков с PostgreSQL (требуется запущенный контейнер):
+For PostgreSQL benchmarks (requires a running container):
 ```bash
-# Запустить PostgreSQL
+# Start PostgreSQL
 docker run -d --name needlecrud-postgres \
   -e POSTGRES_DB=needlecrud-test \
   -e POSTGRES_USER=needlecrud-test \
@@ -36,14 +36,14 @@ docker run -d --name needlecrud-postgres \
   -p 5432:5432 \
   postgres:latest
 
-# Запустить бенчмарк
+# Run benchmark
 dotnet run -c Release -- --filter *CrudDbRepository*
 
-# Остановить PostgreSQL
+# Stop PostgreSQL
 docker stop needlecrud-postgres
 ```
 
-Или использовать готовый скрипт:
+Or use the ready-made script:
 ```bash
 # Linux/macOS
 ./run-crud-benchmarks.sh postgres
@@ -52,43 +52,43 @@ docker stop needlecrud-postgres
 .\run-crud-benchmarks.ps1 -postgres
 ```
 
-### Запуск с дополнительными опциями
+### Running with Additional Options
 
 ```bash
-# Только бенчмарк ParseComplexFilter
+# Only ParseComplexFilter benchmark
 dotnet run -c Release -- --filter *ParseComplexFilter
 
-# С экспортом результатов в разные форматы
+# Export results to different formats
 dotnet run -c Release -- --exporters json html
 
-# Запуск с конкретным методом
+# Run with specific method
 dotnet run -c Release -- --filter *CrudDbRepository.Create*
 ```
 
-## Доступные бенчмарки
+## Available Benchmarks
 
 ### CrudDbRepositoryBenchmarks
 
-Измеряет производительность основных CRUD операций с базой данных:
+Measures the performance of basic CRUD operations with a database:
 
-- `Create` - создание новой сущности
-- `GetById` - получение сущности по ID
-- `GetAll` - получение всех сущностей
-- `Update` - обновление существующей сущности
-- `Delete` - удаление сущности
+- `Create` - creating a new entity
+- `GetById` - getting an entity by ID
+- `GetAll` - getting all entities
+- `Update` - updating an existing entity
+- `Delete` - deleting an entity
 
-**Параметры:**
+**Parameters:**
 - `Provider`: InMemory, PostgreSQL
 
-**Особенности:**
-- База данных создается один раз в GlobalSetup для каждого провайдера
-- Между итерациями данные очищаются и пересоздаются (RemoveRange + AddRange)
-- ChangeTracker очищается перед и после каждой итерации для избежания конфликтов
-- Тестовые данные генерируются один раз и используются во всех итерациях
-- Используется 100 книг, 20 авторов, 10 пользователей и другие связанные сущности
-- Настроен SimpleJob с 1 warmup и 5 итерациями для стабильных результатов
+**Features:**
+- Database is created once in GlobalSetup for each provider
+- Data is cleared and recreated between iterations (RemoveRange + AddRange)
+- ChangeTracker is cleared before and after each iteration to avoid conflicts
+- Test data is generated once and used in all iterations
+- Uses 100 books, 20 authors, 10 users and other related entities
+- Configured SimpleJob with 1 warmup and 5 iterations for stable results
 
-**Примечание:** Для запуска бенчмарка с PostgreSQL необходимо запустить контейнер:
+**Note:** To run the benchmark with PostgreSQL, you need to start a container:
 ```bash
 docker run -d -it --rm --name needlecrud-postgres \
   -e POSTGRES_DB=needlecrud-test \
@@ -100,93 +100,93 @@ docker run -d -it --rm --name needlecrud-postgres \
 
 ### GetPagedBenchmarks
 
-Измеряет производительность метода GetPaged на реальной базе данных с различными типами запросов:
+Measures the performance of the GetPaged method on a real database with different types of queries:
 
-- `GetPaged_Simple` - простая пагинация без фильтров и сортировки
-- `GetPaged_SimpleWithFilter` - пагинация с одним фильтром
-- `GetPaged_SimpleWithSort` - пагинация с одной сортировкой
-- `GetPaged_ComplexFilter` - пагинация с множественными фильтрами
-- `GetPaged_ComplexSort` - пагинация с множественной сортировкой
-- `GetPaged_ComplexFull` - комплексный запрос с фильтрами, сортировкой и пагинацией
-- `GetPaged_SimpleGraph` - пагинация с загрузкой связанных сущностей (Include)
-- `GetPaged_ComplexGraph` - пагинация с множественными Includes
+- `GetPaged_Simple` - simple pagination without filters and sorting
+- `GetPaged_SimpleWithFilter` - pagination with a single filter
+- `GetPaged_SimpleWithSort` - pagination with single sorting
+- `GetPaged_ComplexFilter` - pagination with multiple filters
+- `GetPaged_ComplexSort` - pagination with multiple sorting
+- `GetPaged_ComplexFull` - complex query with filters, sorting and pagination
+- `GetPaged_SimpleGraph` - pagination with loading related entities (Include)
+- `GetPaged_ComplexGraph` - pagination with multiple Includes
 
-**Параметры:**
+**Parameters:**
 - `Provider`: InMemory, PostgreSQL
 
-**Особенности:**
-- Тестирует полный цикл работы метода GetPaged от начала до конца
-- Использует реальные данные (100 книг, 20 авторов, 10 пользователей)
-- Измеряет производительность на простых и сложных запросах
-- Позволяет сравнить скорость работы InMemory и PostgreSQL
+**Features:**
+- Tests the complete lifecycle of the GetPaged method from start to finish
+- Uses real data (100 books, 20 authors, 10 users)
+- Measures performance on simple and complex queries
+- Allows comparing the speed of InMemory and PostgreSQL
 
 ### GetPagedComponentsBenchmarks
 
-Измеряет производительность отдельных компонентов метода GetPaged:
+Measures the performance of individual components of the GetPaged method:
 
 **AddFilter:**
-- `AddFilter_Simple` - один фильтр
-- `AddFilter_Complex` - множественные фильтры с разными операторами
-- `AddFilter_NoFilters` - базовая линия без фильтров
+- `AddFilter_Simple` - single filter
+- `AddFilter_Complex` - multiple filters with different operators
+- `AddFilter_NoFilters` - baseline without filters
 
 **AddSort:**
-- `AddSort_Simple` - одна сортировка
-- `AddSort_Complex` - множественная сортировка по нескольким полям
-- `AddSort_NoSort` - базовая линия без сортировки
+- `AddSort_Simple` - single sort
+- `AddSort_Complex` - multiple sorting by several fields
+- `AddSort_NoSort` - baseline without sorting
 
 **ExtractIncludes:**
-- `ExtractIncludes_Simple` - извлечение одного Include из graph
-- `ExtractIncludes_Complex` - извлечение множественных Includes
+- `ExtractIncludes_Simple` - extracting one Include from graph
+- `ExtractIncludes_Complex` - extracting multiple Includes
 
 **GetMemberExpression:**
-- `GetMemberExpression_Simple` - простое свойство
-- `GetMemberExpression_Nested` - вложенное свойство (navigation property)
+- `GetMemberExpression_Simple` - simple property
+- `GetMemberExpression_Nested` - nested property (navigation property)
 
 **ToCamelCase:**
-- `ToCamelCase_Short` - короткая строка
-- `ToCamelCase_Long` - длинная строка
+- `ToCamelCase_Short` - short string
+- `ToCamelCase_Long` - long string
 
 **ToType:**
-- `ToType_Int` - конвертация в int
-- `ToType_Bool` - конвертация в bool
-- `ToType_DateTime` - конвертация в DateTime
-- `ToType_String` - конвертация в string
+- `ToType_Int` - conversion to int
+- `ToType_Bool` - conversion to bool
+- `ToType_DateTime` - conversion to DateTime
+- `ToType_String` - conversion to string
 
 **Combined Operations:**
-- `Combined_FilterAndCount` - фильтрация + подсчет
-- `Combined_SortAndCount` - сортировка + подсчет
-- `Combined_FilterSortAndCount` - фильтрация + сортировка + подсчет
+- `Combined_FilterAndCount` - filtering + counting
+- `Combined_SortAndCount` - sorting + counting
+- `Combined_FilterSortAndCount` - filtering + sorting + counting
 
-**Параметры:**
+**Parameters:**
 - `Provider`: InMemory, PostgreSQL
 
-**Особенности:**
-- Измеряет производительность каждого компонента отдельно
-- Помогает найти узкие места в логике обработки запросов
-- Использует реальные данные для точных измерений
-- Позволяет оптимизировать отдельные методы независимо
+**Features:**
+- Measures the performance of each component separately
+- Helps identify bottlenecks in query processing logic
+- Uses real data for accurate measurements
+- Allows optimizing individual methods independently
 
 ### PagedListQueryBenchmarks
 
-Измеряет производительность парсинга параметров запроса:
+Measures the performance of parsing query parameters:
 
-- `ParseSimpleFilter` - парсинг одного фильтра
-- `ParseComplexFilter` - парсинг нескольких фильтров
-- `ParseSimpleSort` - парсинг одной сортировки
-- `ParseComplexSort` - парсинг нескольких сортировок
-- `ParseSimpleGraph` - парсинг простого JSON графа
-- `ParseComplexGraph` - парсинг вложенного JSON графа
-- `ParseUrlEncodedFilter` - парсинг URL-encoded значений
-- `ParseAllParameters` - парсинг всех параметров одновременно
-- `ParseMinimal` - baseline (без параметров)
+- `ParseSimpleFilter` - parsing a single filter
+- `ParseComplexFilter` - parsing multiple filters
+- `ParseSimpleSort` - parsing a single sort
+- `ParseComplexSort` - parsing multiple sorts
+- `ParseSimpleGraph` - parsing a simple JSON graph
+- `ParseComplexGraph` - parsing a nested JSON graph
+- `ParseUrlEncodedFilter` - parsing URL-encoded values
+- `ParseAllParameters` - parsing all parameters simultaneously
+- `ParseMinimal` - baseline (without parameters)
 
-## Результаты
+## Results
 
-Результаты бенчмарков сохраняются в папке `BenchmarkDotNet.Artifacts/results/`.
+Benchmark results are saved in the `BenchmarkDotNet.Artifacts/results/` folder.
 
-## Добавление новых бенчмарков
+## Adding New Benchmarks
 
-Создайте новый класс с атрибутом `[MemoryDiagnoser]` и методами с атрибутом `[Benchmark]`:
+Create a new class with the `[MemoryDiagnoser]` attribute and methods with the `[Benchmark]` attribute:
 
 ```csharp
 using BenchmarkDotNet.Attributes;
@@ -197,22 +197,22 @@ public class MyBenchmarks
     [Benchmark]
     public void MyMethod()
     {
-        // код для измерения
+        // code to measure
     }
 }
 ```
 
-## Полезные атрибуты
+## Useful Attributes
 
-- `[MemoryDiagnoser]` - показывает выделение памяти
-- `[SimpleJob]` - настройка количества прогонов
-- `[Benchmark(Baseline = true)]` - сравнение с baseline
-- `[Params(...)]` - параметризация бенчмарка
-- `[GlobalSetup]` - выполняется один раз перед всеми итерациями
-- `[IterationSetup]` - выполняется перед каждой итерацией
-- `[IterationCleanup]` - выполняется после каждой итерации
+- `[MemoryDiagnoser]` - shows memory allocation
+- `[SimpleJob]` - configures the number of runs
+- `[Benchmark(Baseline = true)]` - comparison with baseline
+- `[Params(...)]` - benchmark parameterization
+- `[GlobalSetup]` - executed once before all iterations
+- `[IterationSetup]` - executed before each iteration
+- `[IterationCleanup]` - executed after each iteration
 
-## Документация
+## Documentation
 
 - [BenchmarkDotNet Documentation](https://benchmarkdotnet.org/articles/overview.html)
 - [Best Practices](https://benchmarkdotnet.org/articles/guides/good-practices.html)
