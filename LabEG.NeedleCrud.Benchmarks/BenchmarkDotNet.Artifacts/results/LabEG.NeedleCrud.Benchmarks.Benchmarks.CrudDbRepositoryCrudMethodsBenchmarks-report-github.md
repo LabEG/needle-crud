@@ -12,13 +12,13 @@ WarmupCount=1
 ```
 | Method  | Provider   | Mean       | Error       | StdDev    | Allocated |
 |-------- |----------- |-----------:|------------:|----------:|----------:|
-| **Create**  | **InMemory**   |   **191.6 μs** |   **146.92 μs** |  **38.15 μs** |   **5.27 KB** |
-| GetById | InMemory   |   226.9 μs |    84.94 μs |  22.06 μs |  21.78 KB |
-| GetAll  | InMemory   |   885.2 μs |   527.98 μs | 137.12 μs | 203.05 KB |
-| Update  | InMemory   |   325.6 μs |   222.98 μs |  34.51 μs |   24.3 KB |
-| Delete  | InMemory   |   386.8 μs |   204.81 μs |  53.19 μs |  26.42 KB |
-| **Create**  | **PostgreSQL** | **1,999.9 μs** |   **599.09 μs** | **155.58 μs** |  **24.88 KB** |
-| GetById | PostgreSQL | 1,341.6 μs |   781.34 μs | 120.91 μs |  14.11 KB |
-| GetAll  | PostgreSQL | 2,695.6 μs | 2,168.90 μs | 335.64 μs | 200.77 KB |
-| Update  | PostgreSQL | 3,048.8 μs |   685.14 μs | 177.93 μs |  38.68 KB |
-| Delete  | PostgreSQL | 2,873.3 μs |   947.22 μs | 146.58 μs |  28.81 KB |
+| **Create**  | **InMemory**   |   **181.6 μs** |   **188.69 μs** |  **49.00 μs** |   **5.27 KB** |
+| GetById | InMemory   |   237.6 μs |    69.00 μs |  10.68 μs |  21.78 KB |
+| GetAll  | InMemory   |   794.4 μs |   158.30 μs |  24.50 μs | 203.05 KB |
+| Update  | InMemory   |   327.4 μs |   166.91 μs |  43.35 μs |   24.3 KB |
+| Delete  | InMemory   |   317.8 μs |   143.96 μs |  37.39 μs |  26.42 KB |
+| **Create**  | **PostgreSQL** | **2,211.9 μs** |   **517.15 μs** |  **80.03 μs** |   **24.7 KB** |
+| GetById | PostgreSQL | 1,353.1 μs |   199.58 μs |  30.89 μs |  14.11 KB |
+| GetAll  | PostgreSQL | 2,980.1 μs | 1,882.42 μs | 488.86 μs | 200.77 KB |
+| Update  | PostgreSQL | 3,113.8 μs | 1,653.76 μs | 429.48 μs |  38.68 KB |
+| Delete  | PostgreSQL | 3,131.0 μs |   806.61 μs | 209.47 μs |  28.81 KB |

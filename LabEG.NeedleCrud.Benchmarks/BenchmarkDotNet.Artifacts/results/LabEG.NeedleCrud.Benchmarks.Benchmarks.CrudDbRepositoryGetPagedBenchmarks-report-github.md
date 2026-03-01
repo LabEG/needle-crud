@@ -9,21 +9,21 @@ AMD Ryzen 7 5800X 3.80GHz, 1 CPU, 16 logical and 8 physical cores
 IterationCount=5  WarmupCount=1  
 
 ```
-| Method                    | Provider   | Mean        | Error      | StdDev     | Gen0   | Gen1   | Allocated |
-|-------------------------- |----------- |------------:|-----------:|-----------:|-------:|-------:|----------:|
-| **GetPaged_Simple**           | **InMemory**   |    **15.54 μs** |   **1.593 μs** |   **0.414 μs** | **2.3193** | **0.0916** |  **38.05 KB** |
-| GetPaged_SimpleWithFilter | InMemory   |    24.33 μs |   3.582 μs |   0.554 μs | 2.5635 | 0.1221 |  42.31 KB |
-| GetPaged_SimpleWithSort   | InMemory   |    30.73 μs |   0.749 μs |   0.194 μs | 2.8687 | 0.1221 |     47 KB |
-| GetPaged_ComplexFilter    | InMemory   |    44.65 μs |   5.793 μs |   0.896 μs | 3.1738 |      - |  54.39 KB |
-| GetPaged_ComplexSort      | InMemory   |    45.51 μs |   5.582 μs |   0.864 μs | 3.6621 |      - |  61.21 KB |
-| GetPaged_ComplexFull      | InMemory   |    56.36 μs |   8.501 μs |   1.316 μs | 3.6621 |      - |  59.97 KB |
-| GetPaged_SimpleGraph      | InMemory   |    35.92 μs |  38.332 μs |   5.932 μs | 3.4180 |      - |  57.62 KB |
-| GetPaged_ComplexGraph     | InMemory   |    95.91 μs | 187.622 μs |  29.035 μs | 4.8828 |      - |  87.22 KB |
-| **GetPaged_Simple**           | **PostgreSQL** | **1,016.02 μs** | **228.946 μs** |  **59.456 μs** |      **-** |      **-** |   **17.3 KB** |
-| GetPaged_SimpleWithFilter | PostgreSQL | 1,049.45 μs | 256.606 μs |  66.640 μs |      - |      - |  21.25 KB |
-| GetPaged_SimpleWithSort   | PostgreSQL | 1,122.18 μs | 393.759 μs | 102.258 μs |      - |      - |  23.83 KB |
-| GetPaged_ComplexFilter    | PostgreSQL | 1,103.52 μs | 345.617 μs |  89.756 μs | 1.9531 |      - |  32.78 KB |
-| GetPaged_ComplexSort      | PostgreSQL | 1,060.56 μs | 231.584 μs |  35.838 μs | 1.9531 |      - |  36.52 KB |
-| GetPaged_ComplexFull      | PostgreSQL | 1,163.84 μs | 411.569 μs | 106.883 μs | 1.9531 |      - |  39.37 KB |
-| GetPaged_SimpleGraph      | PostgreSQL | 1,137.38 μs | 324.543 μs |  84.283 μs |      - |      - |  23.06 KB |
-| GetPaged_ComplexGraph     | PostgreSQL | 1,309.95 μs | 439.322 μs | 114.091 μs | 1.9531 |      - |  38.08 KB |
+| Method                    | Provider   | Mean        | Error      | StdDev    | Gen0   | Gen1   | Allocated |
+|-------------------------- |----------- |------------:|-----------:|----------:|-------:|-------:|----------:|
+| **GetPaged_Simple**           | **InMemory**   |    **15.89 μs** |   **3.444 μs** |  **0.894 μs** | **2.3193** | **0.0916** |  **38.05 KB** |
+| GetPaged_SimpleWithFilter | InMemory   |    24.11 μs |   1.030 μs |  0.159 μs | 2.5635 | 0.1221 |  42.31 KB |
+| GetPaged_SimpleWithSort   | InMemory   |    31.85 μs |   2.224 μs |  0.578 μs | 2.8687 | 0.1221 |     47 KB |
+| GetPaged_ComplexFilter    | InMemory   |    47.62 μs |  40.091 μs |  6.204 μs | 3.1738 |      - |  54.39 KB |
+| GetPaged_ComplexSort      | InMemory   |    48.01 μs |  28.831 μs |  4.462 μs | 3.6621 |      - |  61.69 KB |
+| GetPaged_ComplexFull      | InMemory   |    94.27 μs | 124.014 μs | 32.206 μs | 3.4180 |      - |  60.45 KB |
+| GetPaged_SimpleGraph      | InMemory   |    46.08 μs |  54.940 μs | 14.268 μs | 3.4180 |      - |  57.62 KB |
+| GetPaged_ComplexGraph     | InMemory   |   154.37 μs | 239.844 μs | 62.287 μs | 4.8828 |      - |  87.22 KB |
+| **GetPaged_Simple**           | **PostgreSQL** |   **978.32 μs** | **241.293 μs** | **62.663 μs** |      **-** |      **-** |   **17.3 KB** |
+| GetPaged_SimpleWithFilter | PostgreSQL | 1,089.43 μs | 333.021 μs | 86.484 μs |      - |      - |  21.31 KB |
+| GetPaged_SimpleWithSort   | PostgreSQL | 1,100.31 μs | 282.693 μs | 73.415 μs |      - |      - |  23.82 KB |
+| GetPaged_ComplexFilter    | PostgreSQL | 1,142.62 μs | 361.473 μs | 93.873 μs | 1.9531 |      - |  32.78 KB |
+| GetPaged_ComplexSort      | PostgreSQL | 1,104.98 μs | 334.800 μs | 86.946 μs | 1.9531 |      - |  36.21 KB |
+| GetPaged_ComplexFull      | PostgreSQL | 1,149.29 μs | 332.133 μs | 86.254 μs | 1.9531 |      - |  39.37 KB |
+| GetPaged_SimpleGraph      | PostgreSQL | 1,164.88 μs | 273.798 μs | 71.105 μs |      - |      - |  23.04 KB |
+| GetPaged_ComplexGraph     | PostgreSQL | 1,316.16 μs | 371.276 μs | 96.419 μs | 1.9531 |      - |  38.05 KB |

@@ -11,12 +11,12 @@ IterationCount=5  WarmupCount=3
 ```
 | Method                | Mean      | Error     | StdDev   | Ratio | RatioSD | Gen0   | Allocated | Alloc Ratio |
 |---------------------- |----------:|----------:|---------:|------:|--------:|-------:|----------:|------------:|
-| ParseSimpleFilter     |  77.35 ns |  2.953 ns | 0.457 ns |  6.55 |    0.10 | 0.0153 |     256 B |        2.91 |
-| ParseComplexFilter    | 432.72 ns |  8.543 ns | 2.218 ns | 36.66 |    0.54 | 0.0520 |     872 B |        9.91 |
-| ParseSimpleSort       |  35.14 ns |  9.330 ns | 2.423 ns |  2.98 |    0.19 | 0.0095 |     160 B |        1.82 |
-| ParseComplexSort      |  81.96 ns |  7.057 ns | 1.833 ns |  6.94 |    0.17 | 0.0191 |     320 B |        3.64 |
-| ParseSimpleGraph      | 152.14 ns | 14.508 ns | 3.768 ns | 12.89 |    0.34 | 0.0200 |     336 B |        3.82 |
-| ParseComplexGraph     | 253.40 ns |  5.434 ns | 1.411 ns | 21.47 |    0.32 | 0.0305 |     512 B |        5.82 |
-| ParseUrlEncodedFilter | 196.27 ns |  4.859 ns | 0.752 ns | 16.63 |    0.24 | 0.0291 |     488 B |        5.55 |
-| ParseAllParameters    | 668.95 ns | 20.884 ns | 3.232 ns | 56.67 |    0.83 | 0.0906 |    1528 B |       17.36 |
-| ParseMinimal          |  11.81 ns |  0.692 ns | 0.180 ns |  1.00 |    0.02 | 0.0053 |      88 B |        1.00 |
+| ParseSimpleFilter     |  93.88 ns |  2.759 ns | 0.717 ns |  7.34 |    0.21 | 0.0153 |     256 B |        2.91 |
+| ParseComplexFilter    | 373.01 ns | 20.669 ns | 3.199 ns | 29.18 |    0.84 | 0.0520 |     872 B |        9.91 |
+| ParseSimpleSort       |  32.48 ns |  2.724 ns | 0.708 ns |  2.54 |    0.09 | 0.0095 |     160 B |        1.82 |
+| ParseComplexSort      |  81.11 ns |  4.206 ns | 1.092 ns |  6.34 |    0.19 | 0.0191 |     320 B |        3.64 |
+| ParseSimpleGraph      | 151.26 ns |  8.854 ns | 2.299 ns | 11.83 |    0.37 | 0.0200 |     336 B |        3.82 |
+| ParseComplexGraph     | 266.09 ns | 28.236 ns | 7.333 ns | 20.82 |    0.78 | 0.0305 |     512 B |        5.82 |
+| ParseUrlEncodedFilter | 190.75 ns | 11.783 ns | 1.823 ns | 14.92 |    0.43 | 0.0291 |     488 B |        5.55 |
+| ParseAllParameters    | 698.55 ns | 32.499 ns | 8.440 ns | 54.65 |    1.63 | 0.0906 |    1528 B |       17.36 |
+| ParseMinimal          |  12.79 ns |  1.503 ns | 0.390 ns |  1.00 |    0.04 | 0.0053 |      88 B |        1.00 |

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json.Nodes;
@@ -21,7 +22,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     where TDbContext : DbContext
     where TEntity : class, IEntity<TId>, new()
 {
-    private static readonly Dictionary<Type, TypeConverter> _converterCache = [];
+    private static readonly ConcurrentDictionary<Type, TypeConverter> _converterCache = new();
 
     /// <summary>
     /// Gets the Entity Framework database context
@@ -128,7 +129,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
             .Take(query.PageSize)
             .ToListAsync();
 
-        resultEntity.PageMeta.ElementsInPage = resultEntity.Elements.LongCount();
+        resultEntity.PageMeta.ElementsInPage = resultEntity.Elements.Count;
 
         return resultEntity;
     }
@@ -166,39 +167,43 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
             ParameterExpression param = Expression.Parameter(typeof(TEntity), "TEntity");
             Expression memberExpression = GetMemberExpression(filter.Property, param, typeof(TEntity));
 
+            // Convert filter value to target type once and reuse
+            object convertedValue = ToType(filter.Value, memberExpression.Type);
+            Expression convertedConstant = Expression.Constant(convertedValue);
+
             Expression body = filter.Method switch
             {
                 PagedListQueryFilterMethod.Less => Expression.LessThan(
                     memberExpression,
-                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                    convertedConstant
                 ),
                 PagedListQueryFilterMethod.LessOrEqual => Expression.LessThanOrEqual(
                     memberExpression,
-                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                    convertedConstant
                 ),
                 PagedListQueryFilterMethod.Equal => Expression.Equal(
                     memberExpression,
-                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                    convertedConstant
                 ),
                 PagedListQueryFilterMethod.GreatOrEqual => Expression.GreaterThanOrEqual(
                     memberExpression,
-                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                    convertedConstant
                 ),
                 PagedListQueryFilterMethod.Great => Expression.GreaterThan(
                     memberExpression,
-                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                    convertedConstant
                 ),
                 PagedListQueryFilterMethod.Like => Expression.Call(
                     memberExpression,
                     typeof(string).GetMethod("Contains", [typeof(string)])!,
-                    Expression.Constant(ToType(filter.Value, memberExpression.Type))
+                    convertedConstant
                 ),
                 PagedListQueryFilterMethod.ILike => Expression.GreaterThanOrEqual(
                     Expression.Call(
                         memberExpression,
                         "IndexOf",
                         null,
-                        Expression.Constant(filter.Value, typeof(string)),
+                        convertedConstant,
                         Expression.Constant(StringComparison.InvariantCultureIgnoreCase)
                     ),
                     Expression.Constant(0)
@@ -399,13 +404,10 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         if (!_converterCache.TryGetValue(type, out TypeConverter? converter))
         {
             converter = TypeDescriptor.GetConverter(type);
-            lock (_converterCache)
-            {
-                _converterCache[type] = converter;
-            }
+            _converterCache[type] = converter;
         }
 
-        return converter.ConvertFromInvariantString(value) ??
+        return converter?.ConvertFromInvariantString(value) ??
             throw new InvalidOperationException($"Failed to convert value '{value}' to type '{type.Name}'");
     }
 }
