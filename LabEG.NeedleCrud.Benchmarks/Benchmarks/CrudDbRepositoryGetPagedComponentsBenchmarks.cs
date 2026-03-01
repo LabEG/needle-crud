@@ -17,7 +17,7 @@ namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
 /// Tests AddFilter, AddSort, ExtractIncludes, GetMemberExpression, ToCamelCase, ToType
 /// </summary>
 [MemoryDiagnoser]
-[SimpleJob(warmupCount: 1, iterationCount: 5)]
+[SimpleJob(warmupCount: 3, iterationCount: 15)]
 public class CrudDbRepositoryGetPagedComponentsBenchmarks
 {
     private LibraryDbContext _context = null!;

@@ -12,15 +12,15 @@ WarmupCount=3
 ```
 | Method                       | Provider   | Mean       | Error     | StdDev    | Allocated |
 |----------------------------- |----------- |-----------:|----------:|----------:|----------:|
-| **SimpleCase_RepositoryMethod**  | **InMemory**   |   **205.1 μs** |  **47.22 μs** |  **44.17 μs** |   **46.8 KB** |
-| SimpleCase_DirectDbContext   | InMemory   |   169.9 μs |  24.51 μs |  22.93 μs |  42.49 KB |
-| MediumCase_RepositoryMethod  | InMemory   |   396.9 μs |  80.55 μs |  75.35 μs |   85.2 KB |
-| MediumCase_DirectDbContext   | InMemory   |   312.0 μs |  37.76 μs |  35.32 μs |   76.8 KB |
-| ComplexCase_RepositoryMethod | InMemory   |   373.2 μs |  28.57 μs |  26.73 μs |  90.42 KB |
-| ComplexCase_DirectDbContext  | InMemory   |   374.8 μs |  54.43 μs |  50.92 μs |  77.13 KB |
-| **SimpleCase_RepositoryMethod**  | **PostgreSQL** | **1,620.8 μs** | **155.08 μs** | **137.48 μs** |  **29.83 KB** |
-| SimpleCase_DirectDbContext   | PostgreSQL | 1,641.8 μs | 195.82 μs | 173.59 μs |  25.77 KB |
-| MediumCase_RepositoryMethod  | PostgreSQL | 3,130.4 μs | 226.60 μs | 200.87 μs |  65.73 KB |
-| MediumCase_DirectDbContext   | PostgreSQL | 3,168.1 μs | 196.18 μs | 173.91 μs |  58.94 KB |
-| ComplexCase_RepositoryMethod | PostgreSQL | 2,981.1 μs | 170.94 μs | 159.90 μs |  69.55 KB |
-| ComplexCase_DirectDbContext  | PostgreSQL | 3,116.1 μs | 261.49 μs | 218.36 μs |  60.25 KB |
+| **SimpleCase_RepositoryMethod**  | **InMemory**   |   **179.0 μs** |  **11.91 μs** |   **9.95 μs** |  **47.12 KB** |
+| SimpleCase_DirectDbContext   | InMemory   |   160.4 μs |  10.87 μs |   9.64 μs |  42.49 KB |
+| MediumCase_RepositoryMethod  | InMemory   |   329.4 μs |  11.43 μs |  10.13 μs |  85.09 KB |
+| MediumCase_DirectDbContext   | InMemory   |   285.6 μs |  12.87 μs |  11.41 μs |  77.09 KB |
+| ComplexCase_RepositoryMethod | InMemory   |   385.2 μs |  36.44 μs |  34.09 μs |  90.68 KB |
+| ComplexCase_DirectDbContext  | InMemory   |   293.9 μs |   8.29 μs |   7.35 μs |  77.19 KB |
+| **SimpleCase_RepositoryMethod**  | **PostgreSQL** | **1,551.1 μs** | **127.63 μs** | **113.15 μs** |  **29.83 KB** |
+| SimpleCase_DirectDbContext   | PostgreSQL | 1,500.8 μs |  75.07 μs |  62.69 μs |  25.45 KB |
+| MediumCase_RepositoryMethod  | PostgreSQL | 2,943.8 μs | 232.75 μs | 206.33 μs |   65.5 KB |
+| MediumCase_DirectDbContext   | PostgreSQL | 2,874.2 μs | 171.65 μs | 160.56 μs |  60.45 KB |
+| ComplexCase_RepositoryMethod | PostgreSQL | 3,243.6 μs | 557.99 μs | 494.65 μs |   69.4 KB |
+| ComplexCase_DirectDbContext  | PostgreSQL | 2,992.9 μs | 208.42 μs | 194.96 μs |  59.79 KB |

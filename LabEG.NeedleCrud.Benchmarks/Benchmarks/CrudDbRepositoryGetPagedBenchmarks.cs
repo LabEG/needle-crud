@@ -12,7 +12,7 @@ namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
 /// Tests simple and complex queries on both InMemory and PostgreSQL databases
 /// </summary>
 [MemoryDiagnoser]
-[SimpleJob(warmupCount: 1, iterationCount: 5)]
+[SimpleJob(warmupCount: 3, iterationCount: 15)]
 public class CrudDbRepositoryGetPagedBenchmarks
 {
     private LibraryDbContext _context = null!;

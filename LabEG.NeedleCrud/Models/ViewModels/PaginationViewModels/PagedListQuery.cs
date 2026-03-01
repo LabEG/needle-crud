@@ -195,7 +195,13 @@ public class PagedListQuery
             };
 
             JsonNode? node = JsonNode.Parse(graphString, documentOptions: documentOptions);
-            return node is JsonObject obj ? obj : null;
+            if (node is JsonObject obj)
+            {
+                return obj;
+            }
+            throw new NeedleCrudException(
+                "Graph must be a JSON object with null values for leaf nodes. " +
+                "Example format: {\"author\": {\"books\": {\"category\": null}}, \"category\": {\"books\": null}}");
         }
         catch (JsonException)
         {

@@ -4,6 +4,7 @@ using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
 
 [MemoryDiagnoser]
+[SimpleJob(warmupCount: 3, iterationCount: 15)]
 public class PagedListQueryStructBenchmarks
 {
     private const string SimpleFilter = "name~like~John";

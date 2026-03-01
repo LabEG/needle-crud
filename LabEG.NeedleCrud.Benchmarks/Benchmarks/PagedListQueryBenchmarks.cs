@@ -7,7 +7,7 @@ namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
 /// Benchmarks for PagedListQuery parsing performance
 /// </summary>
 [MemoryDiagnoser]
-[SimpleJob(warmupCount: 3, iterationCount: 5)]
+[SimpleJob(warmupCount: 3, iterationCount: 15)]
 public class PagedListQueryBenchmarks
 {
     private const string SimpleFilter = "name~=~John";

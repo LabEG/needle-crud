@@ -10,7 +10,7 @@ namespace LabEG.NeedleCrud.Benchmarks.Benchmarks;
 /// Benchmarks for CrudDbRepository methods
 /// </summary>
 [MemoryDiagnoser]
-[SimpleJob(warmupCount: 1, iterationCount: 5)]
+[SimpleJob(warmupCount: 3, iterationCount: 15)]
 public class CrudDbRepositoryCrudMethodsBenchmarks
 {
     private LibraryDbContext _context = null!;
