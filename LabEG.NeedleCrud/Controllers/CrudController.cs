@@ -5,7 +5,7 @@ using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace LabEG.NeedleCrud.Controllers;
 
@@ -174,8 +174,8 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
             throw new NeedleCrudException("Parameter 'graph' cannot be null or empty");
         }
 
-        JsonDocument graphDocument = JsonDocument.Parse(graph);
-        TEntity graphResult = await Service.GetGraph(id, graphDocument);
+        JsonObject graphObject = JsonNode.Parse(graph)!.AsObject();
+        TEntity graphResult = await Service.GetGraph(id, graphObject);
 
         return graphResult;
     }

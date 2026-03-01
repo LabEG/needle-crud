@@ -1,4 +1,4 @@
-using System.Text.Json;
+using System.Text.Json.Nodes;
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Repositories;
 using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
@@ -30,7 +30,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     // Helpers
     // -------------------------------------------------------------------------
 
-    private IList<string> ExtractIncludes(JsonDocument graph)
+    private IList<string> ExtractIncludes(JsonObject graph)
     {
         TestableRepository repo = new(_context);
         return repo.PublicExtractIncludes(graph);
@@ -44,7 +44,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     {
         public TestableRepository(LibraryDbContext context) : base(context) { }
 
-        public IList<string> PublicExtractIncludes(JsonDocument graph)
+        public IList<string> PublicExtractIncludes(JsonObject graph)
         {
             return ExtractIncludes(graph);
         }
@@ -66,7 +66,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     public void ExtractIncludes_ExistingNavigationProperty_ReturnsPath()
     {
         // Book.Author exists
-        JsonDocument graph = JsonDocument.Parse("{\"author\":null}");
+        JsonObject graph = JsonNode.Parse("{\"author\":null}")!.AsObject();
 
         IList<string> result = ExtractIncludes(graph);
 
@@ -78,7 +78,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     public void ExtractIncludes_MultipleExistingNavigationProperties_ReturnsAllPaths()
     {
         // Book.Author and Book.Category both exist
-        JsonDocument graph = JsonDocument.Parse("{\"author\":null,\"category\":null}");
+        JsonObject graph = JsonNode.Parse("{\"author\":null,\"category\":null}")!.AsObject();
 
         IList<string> result = ExtractIncludes(graph);
 
@@ -91,7 +91,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     public void ExtractIncludes_NestedExistingProperty_ReturnsDotSeparatedPath()
     {
         // Book.Author → Author.Country — both levels exist
-        JsonDocument graph = JsonDocument.Parse("{\"author\":{\"country\":null}}");
+        JsonObject graph = JsonNode.Parse("{\"author\":{\"country\":null}}")!.AsObject();
 
         IList<string> result = ExtractIncludes(graph);
 
@@ -109,7 +109,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     [InlineData("pageCount")]   // int scalar
     public void ExtractIncludes_AnyPublicPropertyOfBook_DoesNotThrow(string key)
     {
-        JsonDocument graph = JsonDocument.Parse($"{{\"{key}\":null}}");
+        JsonObject graph = JsonNode.Parse($"{{{{\"{key}\":null}}}}")!.AsObject();
 
         // No exception expected — key maps to a real public property of Book
         IList<string> result = ExtractIncludes(graph);
@@ -123,7 +123,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     [Fact]
     public void ExtractIncludes_NonExistentProperty_ThrowsNeedleCrudException()
     {
-        JsonDocument graph = JsonDocument.Parse("{\"nonExistentProperty\":null}");
+        JsonObject graph = JsonNode.Parse("{\"nonExistentProperty\":null}")!.AsObject();
 
         NeedleCrudException ex = Assert.Throws<NeedleCrudException>(
             () => ExtractIncludes(graph)
@@ -137,7 +137,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     public void ExtractIncludes_SqlInjectionAsPropertyName_ThrowsNeedleCrudException()
     {
         // A typical SQL injection string will never match any real property name
-        JsonDocument graph = JsonDocument.Parse("{\"author; DROP TABLE Books--\":null}");
+        JsonObject graph = JsonNode.Parse("{\"author; DROP TABLE Books--\":null}")!.AsObject();
 
         Assert.Throws<NeedleCrudException>(
             () => ExtractIncludes(graph)
@@ -154,7 +154,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     [InlineData("authorName")]  // does not exist; Author does, AuthorName doesn't
     public void ExtractIncludes_StringNotMatchingAnyPublicProperty_ThrowsNeedleCrudException(string key)
     {
-        JsonDocument graph = JsonDocument.Parse($"{{\"{key}\":null}}");
+        JsonObject graph = JsonNode.Parse($"{{{{\"{key}\":null}}}}")!.AsObject();
 
         Assert.Throws<NeedleCrudException>(
             () => ExtractIncludes(graph)
@@ -165,7 +165,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     public void ExtractIncludes_ValidOuterKeyButNonExistentNestedKey_ThrowsNeedleCrudException()
     {
         // author exists on Book, but "injectedField" does not exist on Author
-        JsonDocument graph = JsonDocument.Parse("{\"author\":{\"injectedField; DROP TABLE Authors--\":null}}");
+        JsonObject graph = JsonNode.Parse("{\"author\":{\"injectedField; DROP TABLE Authors--\":null}}")!.AsObject();
 
         Assert.Throws<NeedleCrudException>(
             () => ExtractIncludes(graph)
@@ -176,7 +176,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     public void ExtractIncludes_NonExistentOuterKeyWithValidNestedKey_ThrowsOnOuterKey()
     {
         // outer key does not exist on Book — should throw before even looking at nested keys
-        JsonDocument graph = JsonDocument.Parse("{\"nonExistent\":{\"firstName\":null}}");
+        JsonObject graph = JsonNode.Parse("{\"nonExistent\":{\"firstName\":null}}")!.AsObject();
 
         Assert.Throws<NeedleCrudException>(
             () => ExtractIncludes(graph)
@@ -187,7 +187,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     public void ExtractIncludes_MixedValidAndInvalidKeys_ThrowsOnInvalidKey()
     {
         // "author" is valid, the second key is not a property of Book
-        JsonDocument graph = JsonDocument.Parse("{\"author\":null,\"nonExistentProperty\":null}");
+        JsonObject graph = JsonNode.Parse("{\"author\":null,\"nonExistentProperty\":null}")!.AsObject();
 
         Assert.Throws<NeedleCrudException>(
             () => ExtractIncludes(graph)

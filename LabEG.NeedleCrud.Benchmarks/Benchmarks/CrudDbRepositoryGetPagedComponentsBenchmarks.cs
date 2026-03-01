@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
@@ -297,7 +297,7 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
             return AddSort(queryableData, sorts);
         }
 
-        public IList<string> PublicExtractIncludes(JsonDocument graph)
+        public IList<string> PublicExtractIncludes(JsonObject graph)
         {
             return ExtractIncludes(graph);
         }

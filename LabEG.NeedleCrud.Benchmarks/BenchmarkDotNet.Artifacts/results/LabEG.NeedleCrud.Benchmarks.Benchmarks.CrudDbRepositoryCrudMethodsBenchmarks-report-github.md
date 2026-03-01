@@ -10,15 +10,15 @@ InvocationCount=1  IterationCount=5  UnrollFactor=1
 WarmupCount=1  
 
 ```
-| Method  | Provider   | Mean       | Error       | StdDev      | Allocated |
-|-------- |----------- |-----------:|------------:|------------:|----------:|
-| **Create**  | **InMemory**   |   **294.4 μs** |    **383.8 μs** |    **99.66 μs** |   **5.27 KB** |
-| GetById | InMemory   |   406.9 μs |    506.2 μs |   131.45 μs |  22.73 KB |
-| GetAll  | InMemory   | 1,007.3 μs |    807.7 μs |   209.75 μs | 203.99 KB |
-| Update  | InMemory   |   355.8 μs |    186.2 μs |    48.36 μs |  25.25 KB |
-| Delete  | InMemory   |   345.6 μs |    222.5 μs |    57.79 μs |  27.37 KB |
-| **Create**  | **PostgreSQL** | **8,598.5 μs** | **11,709.5 μs** | **1,812.07 μs** |  **25.02 KB** |
-| GetById | PostgreSQL | 1,758.3 μs |    576.2 μs |   149.63 μs |  14.76 KB |
-| GetAll  | PostgreSQL | 2,760.2 μs |  3,382.4 μs |   523.44 μs | 201.23 KB |
-| Update  | PostgreSQL | 9,028.2 μs | 16,584.6 μs | 4,306.98 μs |   39.4 KB |
-| Delete  | PostgreSQL | 8,485.0 μs | 17,753.5 μs | 4,610.54 μs |  29.46 KB |
+| Method  | Provider   | Mean       | Error       | StdDev    | Allocated |
+|-------- |----------- |-----------:|------------:|----------:|----------:|
+| **Create**  | **InMemory**   |   **191.6 μs** |   **146.92 μs** |  **38.15 μs** |   **5.27 KB** |
+| GetById | InMemory   |   226.9 μs |    84.94 μs |  22.06 μs |  21.78 KB |
+| GetAll  | InMemory   |   885.2 μs |   527.98 μs | 137.12 μs | 203.05 KB |
+| Update  | InMemory   |   325.6 μs |   222.98 μs |  34.51 μs |   24.3 KB |
+| Delete  | InMemory   |   386.8 μs |   204.81 μs |  53.19 μs |  26.42 KB |
+| **Create**  | **PostgreSQL** | **1,999.9 μs** |   **599.09 μs** | **155.58 μs** |  **24.88 KB** |
+| GetById | PostgreSQL | 1,341.6 μs |   781.34 μs | 120.91 μs |  14.11 KB |
+| GetAll  | PostgreSQL | 2,695.6 μs | 2,168.90 μs | 335.64 μs | 200.77 KB |
+| Update  | PostgreSQL | 3,048.8 μs |   685.14 μs | 177.93 μs |  38.68 KB |
+| Delete  | PostgreSQL | 2,873.3 μs |   947.22 μs | 146.58 μs |  28.81 KB |

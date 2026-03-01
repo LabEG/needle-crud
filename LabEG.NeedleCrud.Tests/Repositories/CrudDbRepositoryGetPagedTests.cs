@@ -475,7 +475,7 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
     public async Task GetPaged_LargePageSize_ShouldReturnAllElements()
     {
         // Arrange
-        var settings = new NeedleCrudSettings
+        NeedleCrudSettings settings = new()
         {
             MaxPageSize = 2000 // Allow larger page size for this test
         };

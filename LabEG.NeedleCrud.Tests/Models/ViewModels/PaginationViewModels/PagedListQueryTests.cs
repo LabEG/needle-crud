@@ -1,6 +1,6 @@
 using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace LabEG.NeedleCrud.Tests.Models.ViewModels.PaginationViewModels;
 
@@ -269,8 +269,8 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
-        Assert.True(query.Graph.RootElement.TryGetProperty("user", out _));
-        Assert.True(query.Graph.RootElement.TryGetProperty("items", out _));
+        Assert.True(query.Graph.ContainsKey("user"));
+        Assert.True(query.Graph.ContainsKey("items"));
     }
 
     [Fact]
@@ -284,8 +284,8 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
-        Assert.True(query.Graph.RootElement.TryGetProperty("user", out JsonElement userElement));
-        Assert.True(userElement.TryGetProperty("profile", out _));
+        Assert.True(query.Graph.TryGetPropertyValue("user", out JsonNode? userNode));
+        Assert.True(userNode is JsonObject userObj && userObj.ContainsKey("profile"));
     }
 
     [Fact]
@@ -299,7 +299,7 @@ public class PagedListQueryTests
 
         // Assert
         Assert.NotNull(query.Graph);
-        Assert.True(query.Graph.RootElement.EnumerateObject().All(p => false)); // Check if object is empty
+        Assert.Empty(query.Graph); // Check if object is empty
     }
 
     #endregion
@@ -368,7 +368,7 @@ public class PagedListQueryTests
         Assert.Equal(PagedListQuerySortDirection.Desc, query.Sort[1].Direction);
 
         Assert.NotNull(query.Graph);
-        Assert.True(query.Graph.RootElement.TryGetProperty("profile", out _));
+        Assert.True(query.Graph.ContainsKey("profile"));
     }
 
     [Fact]

@@ -51,8 +51,11 @@ nunit-*.xml
 dlldata.c
 
 # Benchmark Results - ignore all files except .md report files
-BenchmarkDotNet.Artifacts/
-!**/BenchmarkDotNet.Artifacts/results/*.md
+# LabEG.NeedleCrud.Benchmarks/BenchmarkDotNet.Artifacts
+**/BenchmarkDotNet.Artifacts/*.log
+**/BenchmarkDotNet.Artifacts/results/*.csv
+**/BenchmarkDotNet.Artifacts/results/*.html
+
 # .NET
 project.lock.json
 project.fragment.lock.json

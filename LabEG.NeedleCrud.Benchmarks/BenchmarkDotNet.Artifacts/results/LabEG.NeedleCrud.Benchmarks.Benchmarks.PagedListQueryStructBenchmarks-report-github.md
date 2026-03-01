@@ -10,11 +10,11 @@ AMD Ryzen 7 5800X 3.80GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 | Method                 | Mean      | Error    | StdDev   | Gen0   | Allocated |
 |----------------------- |----------:|---------:|---------:|-------:|----------:|
-| CreateSimpleFilter     |  61.66 ns | 1.240 ns | 1.476 ns | 0.0076 |     128 B |
-| CreateComplexFilter    |  95.92 ns | 1.941 ns | 2.157 ns | 0.0119 |     200 B |
-| CreateSimpleSort       |  11.80 ns | 0.251 ns | 0.223 ns | 0.0019 |      32 B |
-| CreateComplexSort      |  12.37 ns | 0.244 ns | 0.240 ns | 0.0038 |      64 B |
-| AccessFilterProperties | 113.92 ns | 2.294 ns | 3.062 ns | 0.0186 |     312 B |
-| AccessSortProperties   |  28.20 ns | 0.496 ns | 0.464 ns | 0.0095 |     160 B |
-| CreateMultipleFilters  | 338.10 ns | 6.592 ns | 7.847 ns | 0.0486 |     816 B |
-| CreateMultipleSorts    |  37.79 ns | 0.780 ns | 0.898 ns | 0.0105 |     176 B |
+| CreateSimpleFilter     |  62.08 ns | 1.223 ns | 1.547 ns | 0.0076 |     128 B |
+| CreateComplexFilter    |  89.62 ns | 0.909 ns | 0.806 ns | 0.0119 |     200 B |
+| CreateSimpleSort       |  11.08 ns | 0.235 ns | 0.220 ns | 0.0019 |      32 B |
+| CreateComplexSort      |  12.13 ns | 0.261 ns | 0.321 ns | 0.0038 |      64 B |
+| AccessFilterProperties | 112.58 ns | 2.303 ns | 3.303 ns | 0.0186 |     312 B |
+| AccessSortProperties   |  27.42 ns | 0.583 ns | 1.020 ns | 0.0095 |     160 B |
+| CreateMultipleFilters  | 316.87 ns | 3.500 ns | 3.273 ns | 0.0486 |     816 B |
+| CreateMultipleSorts    |  36.23 ns | 0.339 ns | 0.317 ns | 0.0105 |     176 B |

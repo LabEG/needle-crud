@@ -4,22 +4,23 @@ BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.7922/25H2/2025Update/HudsonValle
 AMD Ryzen 7 5800X 3.80GHz, 1 CPU, 16 logical and 8 physical cores
 .NET SDK 10.0.103
   [Host]     : .NET 10.0.3 (10.0.3, 10.0.326.7603), X64 RyuJIT x86-64-v3
-  Job-MEHJPP : .NET 10.0.3 (10.0.3, 10.0.326.7603), X64 RyuJIT x86-64-v3
+  Job-KQXXMH : .NET 10.0.3 (10.0.3, 10.0.326.7603), X64 RyuJIT x86-64-v3
 
-IterationCount=5  WarmupCount=1  
+InvocationCount=1  IterationCount=15  UnrollFactor=1  
+WarmupCount=3  
 
 ```
-| Method                       | Provider   | Mean        | Error      | StdDev     | Gen0   | Allocated |
-|----------------------------- |----------- |------------:|-----------:|-----------:|-------:|----------:|
-| **SimpleCase_RepositoryMethod**  | **InMemory**   |    **35.96 μs** |  **14.029 μs** |   **2.171 μs** | **2.6855** |  **45.01 KB** |
-| SimpleCase_DirectDbContext   | InMemory   |    27.47 μs |   0.868 μs |   0.134 μs | 2.4414 |   40.2 KB |
-| MediumCase_RepositoryMethod  | InMemory   |   110.41 μs | 161.962 μs |  25.064 μs | 3.9063 |  68.75 KB |
-| MediumCase_DirectDbContext   | InMemory   |   103.83 μs |  60.512 μs |   9.364 μs | 4.3945 |  73.95 KB |
-| ComplexCase_RepositoryMethod | InMemory   |   111.98 μs | 161.115 μs |  24.933 μs | 4.3945 |  72.43 KB |
-| ComplexCase_DirectDbContext  | InMemory   |   175.08 μs | 256.522 μs |  39.697 μs | 5.8594 | 106.79 KB |
-| **SimpleCase_RepositoryMethod**  | **PostgreSQL** | **1,174.89 μs** | **207.404 μs** |  **53.862 μs** |      **-** |  **25.95 KB** |
-| SimpleCase_DirectDbContext   | PostgreSQL | 1,177.68 μs | 287.091 μs |  74.557 μs |      - |  20.73 KB |
-| MediumCase_RepositoryMethod  | PostgreSQL | 1,225.67 μs | 448.570 μs |  69.417 μs | 1.9531 |  48.16 KB |
-| MediumCase_DirectDbContext   | PostgreSQL | 2,348.23 μs | 360.612 μs |  93.650 μs |      - |  53.86 KB |
-| ComplexCase_RepositoryMethod | PostgreSQL | 1,275.76 μs | 435.993 μs | 113.226 μs | 1.9531 |  51.36 KB |
-| ComplexCase_DirectDbContext  | PostgreSQL | 2,449.90 μs | 296.523 μs |  45.887 μs | 3.9063 |  71.95 KB |
+| Method                       | Provider   | Mean       | Error     | StdDev    | Allocated |
+|----------------------------- |----------- |-----------:|----------:|----------:|----------:|
+| **SimpleCase_RepositoryMethod**  | **InMemory**   |   **217.7 μs** |  **47.19 μs** |  **44.14 μs** |   **46.8 KB** |
+| SimpleCase_DirectDbContext   | InMemory   |   173.4 μs |  35.24 μs |  31.24 μs |  42.77 KB |
+| MediumCase_RepositoryMethod  | InMemory   |   353.3 μs |  47.43 μs |  44.37 μs |  86.22 KB |
+| MediumCase_DirectDbContext   | InMemory   |   330.7 μs |  29.73 μs |  27.81 μs |  77.75 KB |
+| ComplexCase_RepositoryMethod | InMemory   |   447.2 μs |  65.05 μs |  57.67 μs |   89.8 KB |
+| ComplexCase_DirectDbContext  | InMemory   |   325.5 μs |  38.54 μs |  36.05 μs |  77.34 KB |
+| **SimpleCase_RepositoryMethod**  | **PostgreSQL** | **1,718.8 μs** | **104.95 μs** |  **87.64 μs** |  **29.83 KB** |
+| SimpleCase_DirectDbContext   | PostgreSQL | 1,740.1 μs | 100.77 μs |  84.15 μs |  25.45 KB |
+| MediumCase_RepositoryMethod  | PostgreSQL | 3,098.9 μs | 217.75 μs | 193.03 μs |   65.5 KB |
+| MediumCase_DirectDbContext   | PostgreSQL | 3,143.6 μs | 260.14 μs | 230.61 μs |  58.55 KB |
+| ComplexCase_RepositoryMethod | PostgreSQL | 3,153.0 μs | 165.82 μs | 155.11 μs |  69.39 KB |
+| ComplexCase_DirectDbContext  | PostgreSQL | 2,974.1 μs | 198.60 μs | 176.05 μs |  60.81 KB |
