@@ -17,6 +17,7 @@ public class CrudDbRepositoryGetPagedBenchmarks
 {
     private LibraryDbContext _context = null!;
     private CrudDbRepository<LibraryDbContext, Book, Guid> _repository = null!;
+    private CrudDbRepository<LibraryDbContext, Review, Guid> _reviewRepository = null!;
     private string _databaseName = null!;
 
     [Params(DatabaseProvider.InMemory, DatabaseProvider.PostgreSQL)]
@@ -41,6 +42,7 @@ public class CrudDbRepositoryGetPagedBenchmarks
 
         // Create repository
         _repository = new CrudDbRepository<LibraryDbContext, Book, Guid>(_context);
+        _reviewRepository = new CrudDbRepository<LibraryDbContext, Review, Guid>(_context);
     }
 
     [GlobalCleanup]
@@ -98,6 +100,40 @@ public class CrudDbRepositoryGetPagedBenchmarks
     public async Task<PagedList<Book>> GetPaged_ComplexGraph()
     {
         return await _repository.GetPaged(PagedListQueryFixtures.ComplexGraph);
+    }
+
+    #endregion
+
+    #region Navigation Property Benchmarks
+
+    [Benchmark]
+    public async Task<PagedList<Book>> GetPaged_FilterByNavLevel2()
+    {
+        return await _repository.GetPaged(PagedListQueryFixtures.FilterByNavLevel2);
+    }
+
+    [Benchmark]
+    public async Task<PagedList<Book>> GetPaged_SortByNavLevel2()
+    {
+        return await _repository.GetPaged(PagedListQueryFixtures.SortByNavLevel2);
+    }
+
+    [Benchmark]
+    public async Task<PagedList<Book>> GetPaged_FilterAndSortByNavLevel2()
+    {
+        return await _repository.GetPaged(PagedListQueryFixtures.FilterAndSortByNavLevel2);
+    }
+
+    [Benchmark]
+    public async Task<PagedList<Review>> GetPaged_Review_FilterByNavLevel3()
+    {
+        return await _reviewRepository.GetPaged(PagedListQueryFixtures.FilterByNavLevel3ForReview);
+    }
+
+    [Benchmark]
+    public async Task<PagedList<Review>> GetPaged_Review_SortByNavLevel3()
+    {
+        return await _reviewRepository.GetPaged(PagedListQueryFixtures.SortByNavLevel3ForReview);
     }
 
     #endregion

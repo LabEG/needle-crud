@@ -15,6 +15,7 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 {
     private readonly LibraryDbContext _context;
     private readonly CrudDbRepository<LibraryDbContext, Book, Guid> _repository;
+    private readonly CrudDbRepository<LibraryDbContext, Review, Guid> _reviewRepository;
     private readonly TestDataSet _testData;
 
     public CrudDbRepositoryGetPagedTests()
@@ -22,6 +23,7 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
         // Create in-memory database for tests
         _context = LibraryDbContextFactory.Create(DatabaseProvider.InMemory, $"GetPagedTestDb_{Guid.NewGuid()}");
         _repository = new CrudDbRepository<LibraryDbContext, Book, Guid>(_context);
+        _reviewRepository = new CrudDbRepository<LibraryDbContext, Review, Guid>(_context);
 
         // Generate test data
         _testData = TestDataGenerator.Generate(seed: 42);
@@ -568,6 +570,253 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
         // Assert
         Assert.Equal(expectedTotalElements, result.PageMeta.TotalElements);
         Assert.Equal(expectedTotalPages, result.PageMeta.TotalPages);
+    }
+
+    #endregion
+
+    #region Navigation Property Filter and Sort Tests
+
+    [Fact]
+    public async Task GetPaged_FilterByNavLevel2_AuthorCountry_ShouldReturnMatchingBooks()
+    {
+        // Arrange
+        // Pick a country that is guaranteed to exist in generated data
+        string country = _testData.Authors
+            .First(a => !string.IsNullOrEmpty(a.Country)).Country;
+
+        int expectedCount = _testData.Books.Count(b =>
+        {
+            Author? author = _testData.Authors.FirstOrDefault(a => a.Id == b.AuthorId);
+            return author?.Country == country;
+        });
+
+        // Author must be included so the InMemory provider can evaluate the predicate
+        PagedListQuery query = new(
+            pageSize: 100,
+            pageNumber: 1,
+            filter: $"Author.Country~=~{country}",
+            sort: null,
+            graph: "{\"Author\":null}"
+        );
+
+        // Act
+        PagedList<Book> result = await _repository.GetPaged(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
+        Assert.All(result.Elements, book =>
+        {
+            Assert.NotNull(book.Author);
+            Assert.Equal(country, book.Author.Country);
+        });
+    }
+
+    [Fact]
+    public async Task GetPaged_FilterByNavLevel2_CategoryName_ShouldReturnMatchingBooks()
+    {
+        // Arrange
+        string categoryName = _testData.Categories
+            .First(c => !string.IsNullOrEmpty(c.Name)).Name;
+
+        int expectedCount = _testData.Books.Count(b =>
+        {
+            Category? category = _testData.Categories.FirstOrDefault(c => c.Id == b.CategoryId);
+            return category?.Name == categoryName;
+        });
+
+        PagedListQuery query = new(
+            pageSize: 100,
+            pageNumber: 1,
+            filter: $"Category.Name~=~{categoryName}",
+            sort: null,
+            graph: "{\"Category\":null}"
+        );
+
+        // Act
+        PagedList<Book> result = await _repository.GetPaged(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
+        Assert.All(result.Elements, book =>
+        {
+            Assert.NotNull(book.Category);
+            Assert.Equal(categoryName, book.Category.Name);
+        });
+    }
+
+    [Fact]
+    public async Task GetPaged_SortByNavLevel2_AuthorCountry_ShouldOrderBooksCorrectly()
+    {
+        // Arrange
+        PagedListQuery query = new(
+            pageSize: 50,
+            pageNumber: 1,
+            filter: null,
+            sort: "Author.Country~asc,Title~asc",
+            graph: "{\"Author\":null}"
+        );
+
+        // Act
+        PagedList<Book> result = await _repository.GetPaged(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.Elements.Count > 1);
+
+        for (int i = 0; i < result.Elements.Count - 1; i++)
+        {
+            int countryCompare = string.Compare(
+                result.Elements[i].Author.Country,
+                result.Elements[i + 1].Author.Country,
+                StringComparison.Ordinal);
+
+            if (countryCompare < 0) continue; // correct ascending order
+
+            if (countryCompare > 0)
+                Assert.Fail(
+                    $"Books not sorted by Author.Country asc: '{result.Elements[i].Author.Country}' > '{result.Elements[i + 1].Author.Country}'");
+
+            // Same country — verify secondary sort by Title ascending
+            Assert.True(
+                string.Compare(result.Elements[i].Title, result.Elements[i + 1].Title, StringComparison.Ordinal) <= 0,
+                "When Author.Country is equal, Title should be ascending");
+        }
+    }
+
+    [Fact]
+    public async Task GetPaged_FilterAndSortByNavLevel2_ShouldCombineCorrectly()
+    {
+        // Arrange — filter books whose author's country contains "a" (ilike),
+        //           then sort by author's country asc, category name asc
+        PagedListQuery query = new(
+            pageSize: 50,
+            pageNumber: 1,
+            filter: "Author.Country~ilike~a",
+            sort: "Author.Country~asc,Category.Name~asc",
+            graph: "{\"Author\":null,\"Category\":null}"
+        );
+
+        int expectedCount = _testData.Books.Count(b =>
+        {
+            Author? author = _testData.Authors.FirstOrDefault(a => a.Id == b.AuthorId);
+            return author?.Country.Contains('a', StringComparison.InvariantCultureIgnoreCase) == true;
+        });
+
+        // Act
+        PagedList<Book> result = await _repository.GetPaged(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
+
+        // Verify filter — every book's author country must contain 'a'
+        Assert.All(result.Elements, book =>
+        {
+            Assert.NotNull(book.Author);
+            Assert.True(
+                book.Author.Country.Contains('a', StringComparison.InvariantCultureIgnoreCase),
+                $"Author.Country '{book.Author.Country}' should contain 'a' (case-insensitive)");
+        });
+
+        // Verify sort — author country ascending, then category name ascending
+        for (int i = 0; i < result.Elements.Count - 1; i++)
+        {
+            int countryCompare = string.Compare(
+                result.Elements[i].Author.Country,
+                result.Elements[i + 1].Author.Country,
+                StringComparison.Ordinal);
+
+            if (countryCompare < 0) continue;
+
+            if (countryCompare > 0)
+                Assert.Fail("Books not sorted by Author.Country ascending");
+
+            // Same author country — check Category.Name secondary sort
+            Assert.True(
+                string.Compare(result.Elements[i].Category!.Name, result.Elements[i + 1].Category!.Name, StringComparison.Ordinal) <= 0,
+                "When Author.Country is equal, Category.Name should be ascending");
+        }
+    }
+
+    [Fact]
+    public async Task GetPaged_Review_FilterByNavLevel3_BookAuthorCountry_ShouldReturnMatchingReviews()
+    {
+        // Arrange
+        string country = _testData.Authors
+            .First(a => !string.IsNullOrEmpty(a.Country)).Country;
+
+        HashSet<Guid> bookIdsByAuthorCountry = _testData.Books
+            .Where(b => _testData.Authors.Any(a => a.Id == b.AuthorId && a.Country == country))
+            .Select(b => b.Id)
+            .ToHashSet();
+
+        int expectedCount = _testData.Reviews
+            .Count(r => bookIdsByAuthorCountry.Contains(r.BookId));
+
+        // Book and Author must be included so InMemory can evaluate the three-level predicate
+        NeedleCrudSettings settings = new() { MaxPageSize = 300 };
+        PagedListQuery query = new(
+            pageSize: 300,
+            pageNumber: 1,
+            filter: $"Book.Author.Country~=~{country}",
+            sort: null,
+            graph: "{\"Book\":{\"Author\":null}}",
+            settings: settings
+        );
+
+        // Act
+        PagedList<Review> result = await _reviewRepository.GetPaged(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
+        Assert.All(result.Elements, review =>
+        {
+            Assert.NotNull(review.Book);
+            Assert.NotNull(review.Book.Author);
+            Assert.Equal(country, review.Book.Author.Country);
+        });
+    }
+
+    [Fact]
+    public async Task GetPaged_Review_SortByNavLevel3_BookAuthorCountry_ShouldOrderCorrectly()
+    {
+        // Arrange
+        PagedListQuery query = new(
+            pageSize: 50,
+            pageNumber: 1,
+            filter: null,
+            sort: "Book.Author.Country~asc,Rating~desc",
+            graph: "{\"Book\":{\"Author\":null}}"
+        );
+
+        // Act
+        PagedList<Review> result = await _reviewRepository.GetPaged(query);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.Elements.Count > 1);
+
+        for (int i = 0; i < result.Elements.Count - 1; i++)
+        {
+            int countryCompare = string.Compare(
+                result.Elements[i].Book.Author.Country,
+                result.Elements[i + 1].Book.Author.Country,
+                StringComparison.Ordinal);
+
+            if (countryCompare < 0) continue;
+
+            if (countryCompare > 0)
+                Assert.Fail(
+                    $"Reviews not sorted by Book.Author.Country asc: '{result.Elements[i].Book.Author.Country}' > '{result.Elements[i + 1].Book.Author.Country}'");
+
+            // Same country — verify secondary sort by Rating descending
+            Assert.True(
+                result.Elements[i].Rating >= result.Elements[i + 1].Rating,
+                "When Book.Author.Country is equal, Rating should be descending");
+        }
     }
 
     #endregion

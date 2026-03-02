@@ -22,9 +22,11 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
 {
     private LibraryDbContext _context = null!;
     private TestableRepository _repository = null!;
+    private TestableReviewRepository _reviewRepository = null!;
     private string _databaseName = null!;
 
     private IQueryable<Book> _queryableData = null!;
+    private IQueryable<Review> _reviewQueryableData = null!;
     private Consumer _consumer = null!;
 
     [Params(DatabaseProvider.InMemory, DatabaseProvider.PostgreSQL)]
@@ -48,6 +50,7 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
 
         // Create repository with exposed methods
         _repository = new TestableRepository(_context);
+        _reviewRepository = new TestableReviewRepository(_context);
 
         // Create consumer for IQueryable materialization
         _consumer = new Consumer();
@@ -65,6 +68,7 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     {
         // Reset queryable data for each iteration
         _queryableData = _context.Set<Book>().AsQueryable();
+        _reviewQueryableData = _context.Set<Review>().AsQueryable();
         _context.ChangeTracker.Clear();
     }
 
@@ -102,6 +106,22 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     public void AddFilter_ComplexGraph()
     {
         IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.ComplexGraph.Filter);
+        _consumer.Consume(result.Expression);
+    }
+
+    [Benchmark]
+    public void AddFilter_NavLevel2()
+    {
+        // Filter by Author.Country (2-level navigation property)
+        IQueryable<Book> result = _repository.PublicAddFilter(_queryableData, PagedListQueryFixtures.FilterByNavLevel2.Filter);
+        _consumer.Consume(result.Expression);
+    }
+
+    [Benchmark]
+    public void AddFilter_NavLevel3()
+    {
+        // Filter by Book.Author.Country on Review queryable (3-level navigation property)
+        IQueryable<Review> result = _reviewRepository.PublicAddFilter(_reviewQueryableData, PagedListQueryFixtures.FilterByNavLevel3ForReview.Filter);
         _consumer.Consume(result.Expression);
     }
 
@@ -144,6 +164,22 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
         _consumer.Consume(result.Expression);
     }
 
+    [Benchmark]
+    public void AddSort_NavLevel2()
+    {
+        // Sort by Author.Country, then Title (2-level navigation property)
+        IQueryable<Book> result = _repository.PublicAddSort(_queryableData, PagedListQueryFixtures.SortByNavLevel2.Sort);
+        _consumer.Consume(result.Expression);
+    }
+
+    [Benchmark]
+    public void AddSort_NavLevel3()
+    {
+        // Sort by Book.Author.Country, then Rating on Review queryable (3-level navigation property)
+        IQueryable<Review> result = _reviewRepository.PublicAddSort(_reviewQueryableData, PagedListQueryFixtures.SortByNavLevel3ForReview.Sort);
+        _consumer.Consume(result.Expression);
+    }
+
     #endregion
 
     #region ExtractIncludes Benchmarks
@@ -176,6 +212,22 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     {
         ParameterExpression param = Expression.Parameter(typeof(Book), "Book");
         return _repository.PublicGetMemberExpression("Author.FirstName", param, typeof(Book));
+    }
+
+    [Benchmark]
+    public Expression? GetMemberExpression_NavLevel2()
+    {
+        // 2-level: Book -> Author.Country
+        ParameterExpression param = Expression.Parameter(typeof(Book), "Book");
+        return _repository.PublicGetMemberExpression("Author.Country", param, typeof(Book));
+    }
+
+    [Benchmark]
+    public Expression? GetMemberExpression_NavLevel3()
+    {
+        // 3-level: Review -> Book.Author.Country
+        ParameterExpression param = Expression.Parameter(typeof(Review), "Review");
+        return _reviewRepository.PublicGetMemberExpression("Book.Author.Country", param, typeof(Review));
     }
 
     #endregion
@@ -315,6 +367,31 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
         public object? PublicToType(string value, Type type)
         {
             return ToType(value, type);
+        }
+    }
+
+    /// <summary>
+    /// Testable Review repository exposing protected methods for nav-level-3 benchmarks
+    /// </summary>
+    private class TestableReviewRepository : CrudDbRepository<LibraryDbContext, Review, Guid>
+    {
+        public TestableReviewRepository(LibraryDbContext dbContext) : base(dbContext)
+        {
+        }
+
+        public IQueryable<Review> PublicAddFilter(IQueryable<Review> queryableData, PagedListQueryFilter[] filters)
+        {
+            return AddFilter(queryableData, filters);
+        }
+
+        public IQueryable<Review> PublicAddSort(IQueryable<Review> queryableData, PagedListQuerySort[] sorts)
+        {
+            return AddSort(queryableData, sorts);
+        }
+
+        public Expression? PublicGetMemberExpression(string nestedProperty, ParameterExpression param, Type entityType)
+        {
+            return GetMemberExpression(nestedProperty, param, entityType);
         }
     }
 }
