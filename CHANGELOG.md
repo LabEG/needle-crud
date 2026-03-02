@@ -1,4 +1,19 @@
 # Changelog
+<a name="0.4.0"></a>
+## [0.4.0](https://github.com/LabEG/needle-crud/compare/v0.3.1...v0.4.0) (2026-03-02)
+
+### ### 🚀 Features
+
+* add benchmarks and tests for navigation properties in CrudDbRepository ([9a92c24](https://github.com/LabEG/needle-crud/commit/9a92c24e5b70b219720f09a545e42e2c6a3bc3eb))
+
+### ### 🐛 Bug Fixes
+
+* update .NET version in changelog workflow and enhance filtering/sorting examples in README ([169c659](https://github.com/LabEG/needle-crud/commit/169c659c61bfdd8f16fb77f34b44e58534d35ca2))
+
+### ### ♻️ Refactoring
+
+* benchmark results and improve string comparison in CrudDbRepository ([9551f9c](https://github.com/LabEG/needle-crud/commit/9551f9cebc14cd83012fbc06ed3fd6646809ed2f))
+
 <a name="0.3.1"></a>
 ## [0.3.1](https://github.com/LabEG/needle-crud/compare/v0.3.0...v0.3.1) (2026-03-02)
 
