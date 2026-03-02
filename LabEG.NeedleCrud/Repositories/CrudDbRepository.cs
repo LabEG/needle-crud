@@ -198,15 +198,10 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                     typeof(string).GetMethod("Contains", [typeof(string)])!,
                     convertedConstant
                 ),
-                PagedListQueryFilterMethod.ILike => Expression.GreaterThanOrEqual(
-                    Expression.Call(
-                        memberExpression,
-                        "IndexOf",
-                        null,
-                        convertedConstant,
-                        Expression.Constant(StringComparison.InvariantCultureIgnoreCase)
-                    ),
-                    Expression.Constant(0)
+                PagedListQueryFilterMethod.ILike => Expression.Call(
+                    Expression.Call(memberExpression, typeof(string).GetMethod("ToLower", Type.EmptyTypes)!),
+                    typeof(string).GetMethod("Contains", [typeof(string)])!,
+                    Expression.Constant(((string)convertedValue).ToLower())
                 ),
                 _ => throw new ArgumentOutOfRangeException(nameof(filter.Method), filter.Method, $"Unsupported filter method: {filter.Method}")
             };

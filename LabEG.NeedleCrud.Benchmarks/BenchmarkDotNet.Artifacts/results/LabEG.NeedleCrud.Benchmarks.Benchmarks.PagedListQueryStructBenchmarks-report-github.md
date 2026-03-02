@@ -11,11 +11,11 @@ IterationCount=15  WarmupCount=3
 ```
 | Method                 | Mean      | Error    | StdDev   | Gen0   | Allocated |
 |----------------------- |----------:|---------:|---------:|-------:|----------:|
-| CreateSimpleFilter     |  60.32 ns | 0.584 ns | 0.546 ns | 0.0076 |     128 B |
-| CreateComplexFilter    |  88.08 ns | 0.644 ns | 0.602 ns | 0.0119 |     200 B |
-| CreateSimpleSort       |  11.39 ns | 0.303 ns | 0.284 ns | 0.0019 |      32 B |
-| CreateComplexSort      |  12.48 ns | 0.429 ns | 0.402 ns | 0.0038 |      64 B |
-| AccessFilterProperties | 107.47 ns | 1.454 ns | 1.360 ns | 0.0186 |     312 B |
-| AccessSortProperties   |  28.57 ns | 1.023 ns | 0.854 ns | 0.0095 |     160 B |
-| CreateMultipleFilters  | 326.91 ns | 3.346 ns | 2.966 ns | 0.0486 |     816 B |
-| CreateMultipleSorts    |  37.86 ns | 1.182 ns | 1.106 ns | 0.0105 |     176 B |
+| CreateSimpleFilter     |  60.11 ns | 1.007 ns | 0.942 ns | 0.0076 |     128 B |
+| CreateComplexFilter    |  90.14 ns | 1.860 ns | 1.740 ns | 0.0119 |     200 B |
+| CreateSimpleSort       |  11.31 ns | 0.170 ns | 0.159 ns | 0.0019 |      32 B |
+| CreateComplexSort      |  12.07 ns | 0.237 ns | 0.210 ns | 0.0038 |      64 B |
+| AccessFilterProperties | 112.31 ns | 3.233 ns | 3.024 ns | 0.0186 |     312 B |
+| AccessSortProperties   |  25.91 ns | 0.597 ns | 0.529 ns | 0.0095 |     160 B |
+| CreateMultipleFilters  | 321.36 ns | 2.088 ns | 1.851 ns | 0.0486 |     816 B |
+| CreateMultipleSorts    |  35.07 ns | 0.224 ns | 0.210 ns | 0.0105 |     176 B |
