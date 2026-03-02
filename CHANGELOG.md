@@ -1,4 +1,11 @@
 # Changelog
+<a name="0.3.1"></a>
+## [0.3.1](https://github.com/LabEG/needle-crud/compare/v0.3.0...v0.3.1) (2026-03-02)
+
+### ### 🐛 Bug Fixes
+
+* update Docker image build context and file path; improve exception handling in PagedListQueryTests and CrudDbRepositoryExtractIncludesTests ([81c27cd](https://github.com/LabEG/needle-crud/commit/81c27cde00d68b5f3e608c3467b675cb28020c34))
+
 <a name="0.3.0"></a>
 ## [0.3.0](https://github.com/LabEG/needle-crud/compare/v0.3.0...v0.3.0) (2026-03-02)
 
