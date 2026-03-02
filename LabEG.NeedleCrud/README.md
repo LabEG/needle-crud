@@ -85,11 +85,29 @@ GET /api/books/paged?filter=pageCount~>=~300,isAvailable~=~true
 # Sorting
 GET /api/books/paged?sort=title~asc,publishDate~desc
 
+# Sort by navigation property (level 2) — by author name
+GET /api/books/paged?sort=author.name~asc,title~asc
+
+# Sort by navigation property (level 3) — reviews by book's author country
+GET /api/reviews/paged?sort=book.author.country~asc,book.title~asc
+
 # Pagination
 GET /api/books/paged?pageSize=20&pageNumber=1
 
 # Eager loading
 GET /api/books/paged?graph={"author":null,"category":null}
+
+# Filter by navigation property (level 2) — author's country
+GET /api/books/paged?filter=author.country~=~UK
+
+# Filter by navigation property (level 2) — category name
+GET /api/books/paged?filter=category.name~=~Fiction
+
+# Filter by navigation property (level 3) — reviews for books by a given author
+GET /api/reviews/paged?filter=book.author.name~ilike~Tolkien
+
+# Filter by navigation property (level 3) — loans for fiction books
+GET /api/loans/paged?filter=book.category.name~=~Fiction&graph={"book":null,"user":null}
 
 # Combined
 GET /api/books/paged?pageSize=20&filter=pageCount~>=~300&sort=title~asc&graph={"author":null}

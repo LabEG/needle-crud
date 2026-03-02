@@ -187,9 +187,44 @@ GET /api/books/paged?filter=pageCount~>=~300,isAvailable~=~true,language~=~Engli
 GET /api/books/paged?filter=title~ilike~Harry
 ```
 
+**Filter by navigation property (level 2) — books written by a specific author:**
+```http
+GET /api/books/paged?filter=author.name~ilike~Tolkien
+```
+
+**Filter by navigation property (level 2) — books in a specific category:**
+```http
+GET /api/books/paged?filter=category.name~=~Science Fiction
+```
+
+**Filter by navigation property (level 3) — reviews for books from a specific country's author:**
+```http
+GET /api/reviews/paged?filter=book.author.country~=~UK
+```
+
+**Filter by navigation property (level 3) — loans for books in a given category:**
+```http
+GET /api/loans/paged?filter=book.category.name~=~Fiction&graph={"book":{"author":null}}
+```
+
 **Sort by multiple fields:**
 ```http
 GET /api/books/paged?sort=publishDate~desc,rating~desc,title~asc
+```
+
+**Sort by navigation property (level 2) — by author's name:**
+```http
+GET /api/books/paged?sort=author.name~asc
+```
+
+**Sort by navigation property (level 2) — by category name, then by title:**
+```http
+GET /api/books/paged?sort=category.name~asc,title~asc
+```
+
+**Sort by navigation property (level 3) — reviews sorted by the book's author country:**
+```http
+GET /api/reviews/paged?sort=book.author.country~asc,book.title~asc
 ```
 
 **Paginate results:**
@@ -270,9 +305,22 @@ http://localhost:8080/api/books/paged?graph={"author":null,"category":null}
 filter=name~like~John,age~>=~18,city~=~London
 ```
 
+Navigation properties use dot notation — any depth is supported:
+```
+filter=author.country~=~UK                          # level 2
+filter=book.author.name~ilike~Orwell                # level 3
+filter=loan.book.category.name~=~Fiction            # level 4
+```
+
 **Sort**: `property~direction[,property~direction...]`
 ```
 sort=name~asc,createdDate~desc
+```
+
+Navigation properties use dot notation — any depth is supported:
+```
+sort=author.name~asc                          # level 2
+sort=book.author.country~asc,title~asc        # level 3
 ```
 
 **Graph**: JSON object with navigation properties

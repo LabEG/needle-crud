@@ -162,14 +162,26 @@ GET /api/loans/paged?graph={"book":{"author":null},"user":null}
 ### Searching & Filtering
 
 ```http
-# Find all science fiction books
+# Find all science fiction books (level-2 navigation property)
 GET /api/books/paged?filter=category.name~=~Science Fiction
+
+# Books written by an English author (level-2 navigation property)
+GET /api/books/paged?filter=author.country~=~UK
 
 # Books published after 2020 with high ratings
 GET /api/books/paged?filter=publishYear~>~2020,rating~>=~4.5
 
 # Available books with less than 200 pages (quick reads)
 GET /api/books/paged?filter=isAvailable~=~true,pageCount~<~200
+
+# Reviews for books from a UK author (level-3 navigation property)
+GET /api/reviews/paged?filter=book.author.country~=~UK
+
+# High-rated reviews for fiction books (mixed: direct + level-2 property)
+GET /api/reviews/paged?filter=rating~>=~4,book.category.name~=~Fiction
+
+# Active loans for books by a specific author (level-3 navigation property)
+GET /api/loans/paged?filter=book.author.name~ilike~Tolkien&graph={"book":{"author":null},"user":null}
 ```
 
 ### Sorting
@@ -183,6 +195,18 @@ GET /api/books/paged?sort=rating~desc,reviewsCount~desc
 
 # Alphabetically by title
 GET /api/books/paged?sort=title~asc
+
+# Sort by navigation property (level 2) — books ordered by author name
+GET /api/books/paged?sort=author.name~asc,title~asc
+
+# Sort by navigation property (level 2) — books ordered by category, then title
+GET /api/books/paged?sort=category.name~asc,title~asc
+
+# Sort by navigation property (level 3) — reviews ordered by book's author country
+GET /api/reviews/paged?sort=book.author.country~asc,book.title~asc
+
+# Sort by navigation property (level 3) combined with filter
+GET /api/loans/paged?filter=book.category.name~=~Fiction&sort=book.author.name~asc,book.title~asc&graph={"book":{"author":null},"user":null}
 ```
 
 ### Pagination
