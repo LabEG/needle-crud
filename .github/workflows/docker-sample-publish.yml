@@ -52,8 +52,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./publish
-          file: ./Dockerfile
+          context: .
+          file: LabEG.NeedleCrud.Sample/Dockerfile
           push: true
           tags: labeg/needlecrud-sample:latest, labeg/needlecrud-sample:1, labeg/needlecrud-sample:1.0
           platforms: linux/amd64, linux/arm64/v8

@@ -312,9 +312,9 @@ public class PagedListQueryTests
         // Arrange
         const string graph = "{invalid json}";
 
-        // Act & Assert - should not throw, Graph should be null
-        PagedListQuery query = new(null, null, null, null, graph);
-        Assert.Null(query.Graph);
+        // Act & Assert - should throw NeedleCrudException for invalid JSON
+        NeedleCrudException exception = Assert.Throws<NeedleCrudException>(() => new PagedListQuery(null, null, null, null, graph));
+        Assert.Contains("Invalid JSON in graph parameter", exception.Message);
     }
 
     [Fact]

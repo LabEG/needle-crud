@@ -109,7 +109,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     [InlineData("pageCount")]   // int scalar
     public void ExtractIncludes_AnyPublicPropertyOfBook_DoesNotThrow(string key)
     {
-        JsonObject graph = JsonNode.Parse($"{{{{\"{key}\":null}}}}")!.AsObject();
+        JsonObject graph = JsonNode.Parse($"{{\"{key}\":null}}")!.AsObject();
 
         // No exception expected — key maps to a real public property of Book
         IList<string> result = ExtractIncludes(graph);
@@ -154,7 +154,7 @@ public class CrudDbRepositoryExtractIncludesTests : IDisposable
     [InlineData("authorName")]  // does not exist; Author does, AuthorName doesn't
     public void ExtractIncludes_StringNotMatchingAnyPublicProperty_ThrowsNeedleCrudException(string key)
     {
-        JsonObject graph = JsonNode.Parse($"{{{{\"{key}\":null}}}}")!.AsObject();
+        JsonObject graph = JsonNode.Parse($"{{\"{key}\":null}}")!.AsObject();
 
         Assert.Throws<NeedleCrudException>(
             () => ExtractIncludes(graph)
