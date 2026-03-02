@@ -203,9 +203,9 @@ public class PagedListQuery
                 "Graph must be a JSON object with null values for leaf nodes. " +
                 "Example format: {\"author\": {\"books\": {\"category\": null}}, \"category\": {\"books\": null}}");
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            return null;
+            throw new NeedleCrudException($"Invalid JSON in graph parameter: {ex.Message}");
         }
     }
 }

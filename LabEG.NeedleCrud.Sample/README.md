@@ -291,6 +291,63 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
 ```
 
+## ⚙️ Configuring NeedleCrudSettings
+
+NeedleCrud works out of the box with default limits. To customize them, register `NeedleCrudSettings` in `Program.cs`:
+
+**Via `appsettings.json`:**
+
+```json
+// appsettings.json
+{
+  "NeedleCrud": {
+    "MaxGetAllCount": 500,
+    "MaxPageSize":    50,
+    "MaxFilterCount": 20,
+    "MaxSortCount":   10,
+    "MaxGraphDepth":  8
+  }
+}
+```
+
+```csharp
+// Program.cs
+builder.Services.Configure<NeedleCrudSettings>(
+    builder.Configuration.GetSection("NeedleCrud"));
+```
+
+**Or directly in code:**
+
+```csharp
+// Program.cs
+builder.Services.Configure<NeedleCrudSettings>(options =>
+{
+    options.MaxGetAllCount = 500;
+    options.MaxPageSize    = 50;
+    options.MaxFilterCount = 20;
+    options.MaxSortCount   = 10;
+    options.MaxGraphDepth  = 8;
+});
+```
+
+If `NeedleCrudSettings` is not registered, default values are used automatically — controllers require no extra constructor parameters:
+
+```csharp
+[Route("api/books")]
+public class BooksController(ICrudDbService<LibraryDbContext, Book, Guid> service)
+    : CrudController<Book, Guid>(service) { }
+```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `MaxGetAllCount` | 1000 | Maximum entities returned by `GET /` |
+| `MaxPageSize` | 100 | Maximum `pageSize` query parameter value |
+| `MaxFilterCount` | 50 | Maximum number of filter conditions per request |
+| `MaxSortCount` | 50 | Maximum number of sort conditions per request |
+| `MaxGraphDepth` | 16 | Maximum depth of nested eager-loading graph |
+
+---
+
 ## 🛠️ Implementation Details
 
 ### Database Context

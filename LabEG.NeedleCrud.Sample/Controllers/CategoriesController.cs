@@ -1,10 +1,8 @@
 using LabEG.NeedleCrud.Controllers;
 using LabEG.NeedleCrud.Services;
-using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
 using LabEG.NeedleCrud.TestsFixtures.DAL;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace LabEG.NeedleCrud.Sample.Controllers;
 
@@ -21,8 +19,7 @@ namespace LabEG.NeedleCrud.Sample.Controllers;
 /// </remarks>
 [Route("api/categories")]
 public class CategoriesController(
-    ICrudDbService<LibraryDbContext, Category, Guid> service,
-    IOptions<NeedleCrudSettings> settings
-) : CrudController<Category, Guid>(service, settings)
+    ICrudDbService<LibraryDbContext, Category, Guid> service
+) : CrudController<Category, Guid>(service)
 {
 }

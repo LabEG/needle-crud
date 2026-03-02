@@ -1,10 +1,8 @@
 using LabEG.NeedleCrud.Controllers;
 using LabEG.NeedleCrud.Services;
-using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
 using LabEG.NeedleCrud.TestsFixtures.DAL;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 // using Microsoft.AspNetCore.Authorization;
 
 namespace LabEG.NeedleCrud.Sample.Controllers;
@@ -45,8 +43,7 @@ namespace LabEG.NeedleCrud.Sample.Controllers;
 // etc.) — NeedleCrud does not interfere with the ASP.NET Core auth pipeline.
 // ────────────────────────────────────────────────────────────────────────────
 public class BooksController(
-    ICrudDbService<LibraryDbContext, Book, Guid> service,
-    IOptions<NeedleCrudSettings> settings
-) : CrudController<Book, Guid>(service, settings)
+    ICrudDbService<LibraryDbContext, Book, Guid> service
+) : CrudController<Book, Guid>(service)
 {
 }

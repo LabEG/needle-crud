@@ -41,11 +41,14 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// Initializes a new instance of the <see cref="CrudController{TEntity, TId}"/> class.
     /// </summary>
     /// <param name="service">The CRUD service instance to use for entity operations.</param>
-    /// <param name="settings">The NeedleCrud settings.</param>
-    public CrudController(ICrudService<TEntity, TId> service, IOptions<NeedleCrudSettings> settings)
+    /// <param name="settings">
+    /// Optional NeedleCrud settings. When <see langword="null"/>, default
+    /// <see cref="NeedleCrudSettings"/> values are used.
+    /// </param>
+    public CrudController(ICrudService<TEntity, TId> service, IOptions<NeedleCrudSettings>? settings = null)
     {
         Service = service;
-        _settings = settings.Value;
+        _settings = settings?.Value ?? new NeedleCrudSettings();
     }
 
     /// <summary>
