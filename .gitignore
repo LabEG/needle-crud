@@ -146,6 +146,9 @@ coverage*.json
 coverage*.xml
 coverage*.info
 
+# Generated HTML coverage reports (run-tests-coverage.sh)
+**/coverage-report/
+
 # Visual Studio code coverage results
 *.coverage
 *.coveragexml
