@@ -1,4 +1,5 @@
 using LabEG.NeedleCrud.Models.Entities;
+using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
@@ -64,7 +65,17 @@ where TEntity : class, IEntity<TId>, new()
     public virtual async Task Update(TId id, TEntity entity, CancellationToken ct = default)
     {
         await Repository.Update(id, entity, ct);
-        await DBContext.SaveChangesAsync(ct);
+        try
+        {
+            await DBContext.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // EF Core throws DbUpdateConcurrencyException when the UPDATE affects 0 rows,
+            // which means the entity with the given id does not exist in the database.
+            throw new ObjectNotFoundNeedleCrudException(
+                $"{typeof(TEntity).Name} with ID '{id}' not found");
+        }
     }
 
     /// <inheritdoc/>

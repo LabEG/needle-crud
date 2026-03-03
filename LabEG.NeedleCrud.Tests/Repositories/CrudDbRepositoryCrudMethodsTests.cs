@@ -323,13 +323,14 @@ public class CrudDbRepositoryTests : IDisposable
         Book book = _testData.Books[0];
         book.Id = nonExistingId;
 
-        // Act & Assert
-        ObjectNotFoundNeedleCrudException exception = await Assert.ThrowsAsync<ObjectNotFoundNeedleCrudException>(
-            () => _repository.Update(nonExistingId, book)
-        );
+        // Act – Repository.Update no longer does a pre-check SELECT; the error is
+        // detected when SaveChangesAsync finds that the UPDATE affected 0 rows.
+        await _repository.Update(nonExistingId, book);
 
-        Assert.Contains(nonExistingId.ToString(), exception.Message);
-        Assert.Contains("Book", exception.Message);
+        // Assert – EF Core raises DbUpdateConcurrencyException for 0-row updates.
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(
+            () => _context.SaveChangesAsync()
+        );
     }
 
     [Fact]

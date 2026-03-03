@@ -78,16 +78,28 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <inheritdoc/>
-    public virtual async Task Update(TId id, TEntity entity, CancellationToken ct = default)
+    public virtual Task Update(TId id, TEntity entity, CancellationToken ct = default)
     {
-        bool exists = await DBContext.Set<TEntity>().AnyAsync(e => e.Id!.Equals(id), ct);
-        if (!exists)
+        entity.Id = id;
+
+        // Detach any already-tracked instance with the same key to avoid
+        // "another instance with same key is tracked" conflict.
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<TEntity>? tracked =
+            DBContext.ChangeTracker
+                .Entries<TEntity>()
+                .FirstOrDefault(e => e.Entity.Id!.Equals(id));
+
+        if (tracked is not null)
         {
-            throw new ObjectNotFoundNeedleCrudException($"{typeof(TEntity).Name} with ID '{id}' not found");
+            tracked.State = EntityState.Detached;
         }
 
-        entity.Id = id;
-        DBContext.Set<TEntity>().Update(entity);
+        // Mark the entity as modified so SaveChangesAsync issues a single UPDATE.
+        // If the row does not exist the UPDATE will affect 0 rows and EF Core will
+        // throw DbUpdateConcurrencyException, which is caught by the service layer.
+        DBContext.Entry(entity).State = EntityState.Modified;
+
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
