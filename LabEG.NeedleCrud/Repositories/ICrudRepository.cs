@@ -1,4 +1,5 @@
 using LabEG.NeedleCrud.Models.Entities;
+using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using System.Text.Json.Nodes;
 
@@ -17,61 +18,70 @@ public interface ICrudRepository<TEntity, TId>
     /// Creates a new entity in the data store.
     /// </summary>
     /// <param name="entity">The entity to create. Must not be null.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the created entity with its assigned identifier.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is null.</exception>
-    Task<TEntity> Create(TEntity entity);
+    Task<TEntity> Create(TEntity entity, CancellationToken ct = default);
 
     /// <summary>
     /// Deletes an entity from the data store by its identifier.
     /// </summary>
     /// <param name="id">The identifier of the entity to delete.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
     /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
-    Task Delete(TId id);
+    Task Delete(TId id, CancellationToken ct = default);
 
     /// <summary>
-    /// Retrieves all entities from the data store.
+    /// Retrieves all entities from the data store up to the configured maximum.
+    /// The returned <see cref="GetAllResult{TEntity}"/> includes the true total count so that
+    /// callers can detect truncation and emit an <c>X-Total-Count</c> header when needed.
     /// </summary>
-    /// <returns>A task that represents the asynchronous operation. The task result contains an array of all entities.</returns>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A task whose result is a <see cref="GetAllResult{TEntity}"/> containing the (potentially truncated) item array and the true total count.</returns>
     /// <remarks>
     /// Warning: This method may return a large dataset. Consider using <see cref="GetPaged"/> for better performance with large collections.
     /// </remarks>
-    Task<TEntity[]> GetAll();
+    Task<GetAllResult<TEntity>> GetAll(CancellationToken ct = default);
 
     /// <summary>
     /// Retrieves a single entity by its identifier.
     /// </summary>
     /// <param name="id">The identifier of the entity to retrieve.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the entity with the specified identifier.</returns>
     /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
-    Task<TEntity> GetById(TId id);
+    Task<TEntity> GetById(TId id, CancellationToken ct = default);
 
     /// <summary>
     /// Updates an existing entity in the data store.
     /// </summary>
     /// <param name="id">The identifier of the entity to update.</param>
     /// <param name="entity">The entity containing updated values. Must not be null.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous update operation.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity"/> is null.</exception>
     /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
-    Task Update(TId id, TEntity entity);
+    Task Update(TId id, TEntity entity, CancellationToken ct = default);
 
     /// <summary>
     /// Retrieves a paginated, filtered, and sorted list of entities.
     /// </summary>
     /// <param name="query">The query configuration containing pagination, filtering, sorting, and graph loading parameters. Must not be null.</param>
     /// <param name="data">Optional pre-filtered queryable data source. If null, uses the default entity set.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="PagedList{TEntity}"/> with the requested page of entities and pagination metadata.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="query"/> is null.</exception>
-    Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity>? data = null);
+    Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity>? data = null, CancellationToken ct = default);
 
     /// <summary>
     /// Retrieves a single entity by its identifier with related entities loaded based on the graph expression.
     /// </summary>
     /// <param name="id">The identifier of the entity to retrieve.</param>
     /// <param name="graph">The JSON object graph expression specifying which related entities to include (eager loading). Must not be null.</param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the entity with its specified related entities loaded.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="graph"/> is null.</exception>
     /// <exception cref="Models.Exceptions.ObjectNotFoundNeedleCrudException">Thrown when an entity with the specified <paramref name="id"/> is not found.</exception>
-    Task<TEntity> GetGraph(TId id, JsonObject graph);
+    Task<TEntity> GetGraph(TId id, JsonObject graph, CancellationToken ct = default);
 }

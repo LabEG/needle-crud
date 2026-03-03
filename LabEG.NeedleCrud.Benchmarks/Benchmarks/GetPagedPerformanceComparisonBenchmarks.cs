@@ -125,14 +125,14 @@ public class GetPagedPerformanceComparisonBenchmarks
         int extraCount = total % pageSize > 0 ? 1 : 0;
         return new PagedList<Book>
         {
-            Elements = items,
-            PageMeta = new PageMeta
+            Items = items,
+            Meta = new PageMeta
             {
                 PageNumber = 1,
                 PageSize = pageSize,
-                TotalElements = total,
+                TotalItems = total,
                 TotalPages = total < pageSize ? 1 : (total / pageSize) + extraCount,
-                ElementsInPage = items.LongCount()
+                ItemsInPage = items.LongCount()
             }
         };
     }

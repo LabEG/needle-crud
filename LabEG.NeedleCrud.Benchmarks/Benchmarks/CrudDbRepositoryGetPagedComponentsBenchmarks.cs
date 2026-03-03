@@ -237,13 +237,13 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
     [Benchmark]
     public string ToCamelCase_Short()
     {
-        return _repository.PublicToCamelCase("title");
+        return _repository.PublicToPascalCase("title");
     }
 
     [Benchmark]
     public string ToCamelCase_Long()
     {
-        return _repository.PublicToCamelCase("publicationDate");
+        return _repository.PublicToPascalCase("publicationDate");
     }
 
     #endregion
@@ -359,9 +359,9 @@ public class CrudDbRepositoryGetPagedComponentsBenchmarks
             return GetMemberExpression(nestedProperty, param, entityType);
         }
 
-        public string PublicToCamelCase(string value)
+        public string PublicToPascalCase(string value)
         {
-            return ToCamelCase(value);
+            return ToPascalCase(value);
         }
 
         public object? PublicToType(string value, Type type)

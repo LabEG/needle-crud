@@ -22,7 +22,7 @@ public class PageMeta
     /// This may be less than <see cref="PageSize"/> for the last page.
     /// Default value is 0.
     /// </summary>
-    public long ElementsInPage { get; set; } = 0;
+    public long ItemsInPage { get; set; } = 0;
 
     /// <summary>
     /// Gets or sets the total number of pages available.
@@ -34,5 +34,5 @@ public class PageMeta
     /// Gets or sets the total number of elements across all pages.
     /// Default value is 0.
     /// </summary>
-    public long TotalElements { get; set; } = 0;
+    public long TotalItems { get; set; } = 0;
 }

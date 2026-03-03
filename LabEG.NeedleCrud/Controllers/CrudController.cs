@@ -1,5 +1,6 @@
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.Exceptions;
+using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.Services;
@@ -55,40 +56,53 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// Create a new entity
     /// </summary>
     /// <param name="entity">Entity to create</param>
+    /// <param name="ct">Cancellation token automatically bound to the incoming HTTP request lifetime.</param>
     /// <returns>Created entity with generated ID</returns>
     /// <response code="200">Returns the newly created entity</response>
     /// <response code="400">If the entity data is invalid</response>
     [HttpPost]
-    public virtual async Task<TEntity> Create([FromBody] TEntity entity)
+    public virtual async Task<TEntity> Create([FromBody] TEntity entity, CancellationToken ct = default)
     {
-        return await Service.Create(entity);
+        return await Service.Create(entity, ct);
     }
 
     /// <summary>
     /// Get all entities
     /// </summary>
+    /// <param name="ct">Cancellation token automatically bound to the incoming HTTP request lifetime.</param>
     /// <returns>Array of all entities</returns>
-    /// <response code="200">Returns all entities</response>
+    /// <response code="200">Returns all entities. When the result is truncated the <c>X-Total-Count</c> response header contains the true total count.</response>
     /// <remarks>
     /// Warning: Use with caution on large datasets. Consider using the /paged endpoint for better performance.
+    /// When the dataset exceeds the configured limit the response is truncated and the headers
+    /// <c>X-Total-Count</c> and <c>Warning: 214 "Response is Truncated"</c> are added.
     /// </remarks>
     [HttpGet]
-    public virtual async Task<TEntity[]> GetAll()
+    public virtual async Task<TEntity[]> GetAll(CancellationToken ct = default)
     {
-        return await Service.GetAll();
+        GetAllResult<TEntity> result = await Service.GetAll(ct);
+
+        if (result.IsTruncated)
+        {
+            Response.Headers["X-Total-Count"] = result.TotalCount.ToString();
+            Response.Headers["Warning"] = "214 \"Response is Truncated\"";
+        }
+
+        return result.Items;
     }
 
     /// <summary>
     /// Get a specific entity by ID
     /// </summary>
     /// <param name="id">Entity ID</param>
+    /// <param name="ct">Cancellation token automatically bound to the incoming HTTP request lifetime.</param>
     /// <returns>Entity with the specified ID</returns>
     /// <response code="200">Returns the entity</response>
     /// <response code="404">If the entity is not found</response>
     [HttpGet("{id}")]
-    public virtual async Task<TEntity> GetById(TId id)
+    public virtual async Task<TEntity> GetById(TId id, CancellationToken ct = default)
     {
-        TEntity entity = await Service.GetById(id);
+        TEntity entity = await Service.GetById(id, ct);
 
         return entity;
     }
@@ -98,25 +112,27 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// </summary>
     /// <param name="id">Entity ID to update</param>
     /// <param name="entity">Updated entity data</param>
+    /// <param name="ct">Cancellation token automatically bound to the incoming HTTP request lifetime.</param>
     /// <response code="200">Entity updated successfully</response>
     /// <response code="404">If the entity is not found</response>
     /// <response code="400">If the entity data is invalid</response>
     [HttpPut("{id}")]
-    public virtual async Task Update(TId id, [FromBody] TEntity entity)
+    public virtual async Task Update(TId id, [FromBody] TEntity entity, CancellationToken ct = default)
     {
-        await Service.Update(id, entity);
+        await Service.Update(id, entity, ct);
     }
 
     /// <summary>
     /// Delete an entity
     /// </summary>
     /// <param name="id">Entity ID to delete</param>
+    /// <param name="ct">Cancellation token automatically bound to the incoming HTTP request lifetime.</param>
     /// <response code="200">Entity deleted successfully</response>
     /// <response code="404">If the entity is not found</response>
     [HttpDelete("{id}")]
-    public virtual async Task Delete(TId id)
+    public virtual async Task Delete(TId id, CancellationToken ct = default)
     {
-        await Service.Delete(id);
+        await Service.Delete(id, ct);
     }
 
     /// <summary>
@@ -132,6 +148,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// Example: "Name~asc,Age~desc"</param>
     /// <param name="graph">JSON object defining related entities to include (eager loading).
     /// Example: {"RelatedEntity":null} or {"Parent":{"Child":null}}</param>
+    /// <param name="ct">Cancellation token automatically bound to the incoming HTTP request lifetime.</param>
     /// <returns>Paginated list with metadata</returns>
     /// <response code="200">Returns paginated results</response>
     /// <response code="400">If query parameters are invalid</response>
@@ -145,11 +162,12 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
         [FromQuery] int? pageNumber,
         [FromQuery] string? filter,
         [FromQuery] string? sort,
-        [FromQuery] string? graph
+        [FromQuery] string? graph,
+        CancellationToken ct = default
     )
     {
         PagedListQuery query = new(pageSize, pageNumber, filter, sort, graph, _settings);
-        PagedList<TEntity> pagedResult = await Service.GetPaged(query);
+        PagedList<TEntity> pagedResult = await Service.GetPaged(query, ct);
 
         return pagedResult;
     }
@@ -160,6 +178,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// <param name="id">Entity ID</param>
     /// <param name="graph">JSON document defining related entities to include.
     /// Example: {"Author":null,"Category":null} to load Author and Category relations</param>
+    /// <param name="ct">Cancellation token automatically bound to the incoming HTTP request lifetime.</param>
     /// <returns>Entity with loaded related data</returns>
     /// <response code="200">Returns the entity with related data</response>
     /// <response code="400">If the graph parameter is invalid or missing</response>
@@ -170,7 +189,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
     /// Multiple relationships: {"Relation1":null,"Relation2":null}
     /// </remarks>
     [HttpGet("{id}/graph")]
-    public virtual async Task<TEntity> GetGraph(TId id, [FromQuery] string graph)
+    public virtual async Task<TEntity> GetGraph(TId id, [FromQuery] string graph, CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(graph))
         {
@@ -178,7 +197,7 @@ public class CrudController<TEntity, TId> : ControllerBase, ICrudController<TEnt
         }
 
         JsonObject graphObject = JsonNode.Parse(graph)!.AsObject();
-        TEntity graphResult = await Service.GetGraph(id, graphObject);
+        TEntity graphResult = await Service.GetGraph(id, graphObject, ct);
 
         return graphResult;
     }

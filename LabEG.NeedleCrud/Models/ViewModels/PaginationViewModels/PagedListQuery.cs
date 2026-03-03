@@ -106,12 +106,6 @@ public class PagedListQuery
 
         while (true)
         {
-            // Validate during parsing to catch issues early
-            if (count >= settings.MaxFilterCount)
-            {
-                throw new NeedleCrudException($"Filter count cannot exceed {settings.MaxFilterCount}. Requested: {count + 1}");
-            }
-
             int commaIndex = filterSpan.IndexOf(',');
             if (commaIndex == -1)
             {
@@ -154,12 +148,6 @@ public class PagedListQuery
 
         while (true)
         {
-            // Validate during parsing to catch issues early
-            if (count >= settings.MaxSortCount)
-            {
-                throw new NeedleCrudException($"Sort count cannot exceed {settings.MaxSortCount}. Requested: {count + 1}");
-            }
-
             int commaIndex = sortSpan.IndexOf(',');
             if (commaIndex == -1)
             {

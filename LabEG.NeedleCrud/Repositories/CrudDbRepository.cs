@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using LabEG.NeedleCrud.Models.Entities;
 using LabEG.NeedleCrud.Models.Exceptions;
+using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -43,40 +44,43 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity> Create(TEntity entity)
+    public virtual async Task<TEntity> Create(TEntity entity, CancellationToken ct = default)
     {
         entity.Id = default;
-        await DBContext.Set<TEntity>().AddAsync(entity);
+        await DBContext.Set<TEntity>().AddAsync(entity, ct);
 
         return entity;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity> GetById(TId id)
+    public virtual async Task<TEntity> GetById(TId id, CancellationToken ct = default)
     {
         TEntity resultEntity = await DBContext
             .Set<TEntity>()
-            .FirstOrDefaultAsync((entity) => entity.Id!.Equals(id)) ??
+            .FirstOrDefaultAsync((entity) => entity.Id!.Equals(id), ct) ??
                 throw new ObjectNotFoundNeedleCrudException($"{typeof(TEntity).Name} with ID '{id}' not found");
 
         return resultEntity;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity[]> GetAll()
+    public virtual async Task<GetAllResult<TEntity>> GetAll(CancellationToken ct = default)
     {
+        // Count total entities to detect truncation
+        int totalCount = await DBContext.Set<TEntity>().CountAsync(ct);
+
         // Limit the number of entities returned to prevent resource exhaustion
         TEntity[] allEntities = await DBContext.Set<TEntity>()
             .Take(_settings.MaxGetAllCount)
-            .ToArrayAsync();
+            .ToArrayAsync(ct);
 
-        return allEntities;
+        return new GetAllResult<TEntity>(allEntities, totalCount);
     }
 
     /// <inheritdoc/>
-    public virtual async Task Update(TId id, TEntity entity)
+    public virtual async Task Update(TId id, TEntity entity, CancellationToken ct = default)
     {
-        bool exists = await DBContext.Set<TEntity>().AnyAsync(e => e.Id!.Equals(id));
+        bool exists = await DBContext.Set<TEntity>().AnyAsync(e => e.Id!.Equals(id), ct);
         if (!exists)
         {
             throw new ObjectNotFoundNeedleCrudException($"{typeof(TEntity).Name} with ID '{id}' not found");
@@ -87,18 +91,18 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <inheritdoc/>
-    public virtual async Task Delete(TId id)
+    public virtual async Task Delete(TId id, CancellationToken ct = default)
     {
-        TEntity entity = await GetById(id);
+        TEntity entity = await GetById(id, ct);
         DBContext.Set<TEntity>().Remove(entity);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity>? qData = null)
+    public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, IQueryable<TEntity>? qData = null, CancellationToken ct = default)
     {
         PagedList<TEntity> resultEntity = new();
-        resultEntity.PageMeta.PageNumber = query.PageNumber;
-        resultEntity.PageMeta.PageSize = query.PageSize;
+        resultEntity.Meta.PageNumber = query.PageNumber;
+        resultEntity.Meta.PageSize = query.PageSize;
 
         IQueryable<TEntity> queryableData = qData ?? DBContext.Set<TEntity>();
 
@@ -115,27 +119,27 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         queryableData = AddSort(queryableData, query.Sort);
 
         // count total elements
-        int countPage = await queryableData.CountAsync();
-        resultEntity.PageMeta.TotalElements = countPage;
+        int countPage = await queryableData.CountAsync(ct);
+        resultEntity.Meta.TotalItems = countPage;
 
         // count total pages
         int extraCount = countPage % query.PageSize > 0 ? 1 : 0;
-        resultEntity.PageMeta.TotalPages = (countPage < query.PageSize) ? 1 : (countPage / query.PageSize) + extraCount;
+        resultEntity.Meta.TotalPages = (countPage < query.PageSize) ? 1 : (countPage / query.PageSize) + extraCount;
 
         // get elements
         int countFrom = query.PageNumber == 1 ? 0 : (query.PageSize * query.PageNumber) - query.PageSize;
-        resultEntity.Elements = await queryableData
+        resultEntity.Items = await queryableData
             .Skip(countFrom)
             .Take(query.PageSize)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        resultEntity.PageMeta.ElementsInPage = resultEntity.Elements.Count;
+        resultEntity.Meta.ItemsInPage = resultEntity.Items.Count;
 
         return resultEntity;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph)
+    public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph, CancellationToken ct = default)
     {
         IQueryable<TEntity> graphQuery = DBContext.Set<TEntity>();
 
@@ -146,7 +150,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
             graphQuery = graphQuery.Include(prop);
         }
 
-        TEntity? resultEntity = await graphQuery.FirstOrDefaultAsync((entity) => entity.Id!.Equals(id)) ??
+        TEntity? resultEntity = await graphQuery.FirstOrDefaultAsync((entity) => entity.Id!.Equals(id), ct) ??
             throw new ObjectNotFoundNeedleCrudException($"{typeof(TEntity).Name} with ID '{id}' not found");
 
         return resultEntity;
@@ -198,11 +202,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
                     typeof(string).GetMethod("Contains", [typeof(string)])!,
                     convertedConstant
                 ),
-                PagedListQueryFilterMethod.ILike => Expression.Call(
-                    Expression.Call(memberExpression, typeof(string).GetMethod("ToLower", Type.EmptyTypes)!),
-                    typeof(string).GetMethod("Contains", [typeof(string)])!,
-                    Expression.Constant(((string)convertedValue).ToLower())
-                ),
+                PagedListQueryFilterMethod.ILike => BuildILikeExpression(memberExpression, (string)convertedValue),
                 _ => throw new ArgumentOutOfRangeException(nameof(filter.Method), filter.Method, $"Unsupported filter method: {filter.Method}")
             };
 
@@ -277,7 +277,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
         foreach (KeyValuePair<string, JsonNode?> property in graph)
         {
-            string camelKey = ToCamelCase(property.Key);
+            string camelKey = ToPascalCase(property.Key);
 
             // Handle collection types - get the generic argument type for ICollection<T>
             Type propertyType = currentType;
@@ -331,7 +331,7 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
         for (int i = 0; i < members.Length; i++)
         {
-            string propName = ToCamelCase(members[i]);
+            string propName = ToPascalCase(members[i]);
             PropertyInfo? sortableProperty = elementType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance);
 
             if (sortableProperty is not null)
@@ -350,11 +350,56 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <summary>
-    /// Converts a string value to PascalCase
+    /// Builds a database-side case-insensitive LIKE expression for the <c>ilike</c> filter operator.
+    /// </summary>
+    /// <param name="memberExpression">The member expression representing the column to filter.</param>
+    /// <param name="value">The raw string value to match (without wildcards).</param>
+    /// <returns>An <see cref="Expression"/> that translates to a database-level case-insensitive pattern match.</returns>
+    /// <remarks>
+    /// <para>
+    /// The default implementation uses <see cref="DbFunctionsExtensions.Like(DbFunctions, string, string)"/> with a <c>%value%</c> pattern,
+    /// which is evaluated entirely on the database server — eliminating the full-table-scan caused by
+    /// the previous in-memory <c>.ToLower().Contains()</c> approach.
+    /// </para>
+    /// <para>
+    /// On SQL Server and SQLite the default collation is already case-insensitive, so this works correctly out
+    /// of the box. For PostgreSQL, where <c>LIKE</c> is case-sensitive, override this method and use
+    /// <c>NpgsqlDbFunctionsExtensions.ILike</c> from the <c>Npgsql.EntityFrameworkCore.PostgreSQL</c> package:
+    /// <code>
+    /// protected override Expression BuildILikeExpression(Expression memberExpression, string value)
+    /// {
+    ///     var iLikeMethod = typeof(NpgsqlDbFunctionsExtensions)
+    ///         .GetMethod(nameof(NpgsqlDbFunctionsExtensions.ILike),
+    ///             [typeof(DbFunctions), typeof(string), typeof(string)])!;
+    ///     return Expression.Call(iLikeMethod,
+    ///         Expression.Constant(EF.Functions),
+    ///         memberExpression,
+    ///         Expression.Constant($"%{value}%"));
+    /// }
+    /// </code>
+    /// </para>
+    /// </remarks>
+    protected virtual Expression BuildILikeExpression(Expression memberExpression, string value)
+    {
+        // Use EF.Functions.Like which is translated to a database-side LIKE '%value%'.
+        // This avoids the previous full-table-scan that resulted from calling .ToLower() in C# memory.
+        MethodInfo likeMethod = typeof(DbFunctionsExtensions)
+            .GetMethod(nameof(DbFunctionsExtensions.Like), [typeof(DbFunctions), typeof(string), typeof(string)])!;
+
+        return Expression.Call(
+            likeMethod,
+            Expression.Constant(EF.Functions),
+            memberExpression,
+            Expression.Constant($"%{value}%")
+        );
+    }
+
+    /// <summary>
+    /// Converts the first character of a string to uppercase (PascalCase).
     /// </summary>
     /// <param name="value">String value to convert</param>
-    /// <returns>PascalCase string</returns>
-    protected string ToCamelCase(string value)
+    /// <returns>String with its first character uppercased (PascalCase)</returns>
+    protected string ToPascalCase(string value)
     {
         // Single allocation using string.Create instead of char + Substring (2 allocations)
         return string.Create(value.Length, value, static (chars, state) =>
@@ -372,6 +417,17 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     /// <returns>Converted value</returns>
     protected object ToType(string value, Type type)
     {
+        // Handle Nullable<T> — unwrap the underlying type and recurse
+        Type? underlyingNullable = Nullable.GetUnderlyingType(type);
+        if (underlyingNullable is not null)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return null!; // null is valid for Nullable<T>
+            }
+            return ToType(value, underlyingNullable);
+        }
+
         // Direct type checks in order of frequency for optimal performance
         // Most common types first to minimize average checks
 #pragma warning disable IDE0011 // Add braces

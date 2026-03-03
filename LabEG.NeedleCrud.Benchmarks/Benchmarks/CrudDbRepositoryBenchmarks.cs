@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Repositories;
 using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
 using LabEG.NeedleCrud.TestsFixtures.DAL;
@@ -123,7 +124,8 @@ public class CrudDbRepositoryCrudMethodsBenchmarks
     [Benchmark]
     public async Task<Book[]> GetAll()
     {
-        return await _repository.GetAll();
+        GetAllResult<Book> result = await _repository.GetAll();
+        return result.Items.ToArray();
     }
 
     [Benchmark]

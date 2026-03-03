@@ -1,4 +1,5 @@
 using LabEG.NeedleCrud.Models.Entities;
+using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -39,50 +40,50 @@ where TEntity : class, IEntity<TId>, new()
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity> Create(TEntity entity)
+    public virtual async Task<TEntity> Create(TEntity entity, CancellationToken ct = default)
     {
-        TEntity resultEntity = await Repository.Create(entity);
-        await DBContext.SaveChangesAsync();
+        TEntity resultEntity = await Repository.Create(entity, ct);
+        await DBContext.SaveChangesAsync(ct);
         return resultEntity;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity> GetById(TId id)
+    public virtual async Task<TEntity> GetById(TId id, CancellationToken ct = default)
     {
-        TEntity resultEntity = await Repository.GetById(id);
+        TEntity resultEntity = await Repository.GetById(id, ct);
         return resultEntity;
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity[]> GetAll()
+    public virtual async Task<GetAllResult<TEntity>> GetAll(CancellationToken ct = default)
     {
-        return await Repository.GetAll();
+        return await Repository.GetAll(ct);
     }
 
     /// <inheritdoc/>
-    public virtual async Task Update(TId id, TEntity entity)
+    public virtual async Task Update(TId id, TEntity entity, CancellationToken ct = default)
     {
-        await Repository.Update(id, entity);
-        await DBContext.SaveChangesAsync();
+        await Repository.Update(id, entity, ct);
+        await DBContext.SaveChangesAsync(ct);
     }
 
     /// <inheritdoc/>
-    public virtual async Task Delete(TId id)
+    public virtual async Task Delete(TId id, CancellationToken ct = default)
     {
-        await Repository.Delete(id);
-        await DBContext.SaveChangesAsync();
+        await Repository.Delete(id, ct);
+        await DBContext.SaveChangesAsync(ct);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query)
+    public virtual async Task<PagedList<TEntity>> GetPaged(PagedListQuery query, CancellationToken ct = default)
     {
-        return await Repository.GetPaged(query);
+        return await Repository.GetPaged(query, null, ct);
     }
 
     /// <inheritdoc/>
-    public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph)
+    public virtual async Task<TEntity> GetGraph(TId id, JsonObject graph, CancellationToken ct = default)
     {
-        return await Repository.GetGraph(id, graph);
+        return await Repository.GetGraph(id, graph, ct);
     }
 
 }

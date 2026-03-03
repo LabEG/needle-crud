@@ -1,9 +1,12 @@
 using LabEG.NeedleCrud.Models.Exceptions;
+using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Repositories;
+using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.TestsFixtures.BLL.Entities;
 using LabEG.NeedleCrud.TestsFixtures.DAL;
 using LabEG.NeedleCrud.TestsFixtures.Fixtures;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace LabEG.NeedleCrud.Tests.Repositories;
 
@@ -104,8 +107,9 @@ public class CrudDbRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Assert
-        Book[] allBooks = await _repository.GetAll();
-        Assert.Equal(2, allBooks.Length);
+        GetAllResult<Book> allResult = await _repository.GetAll();
+        Assert.Equal(2, allResult.Items.Length);
+        Assert.Equal(2, allResult.TotalCount);
     }
 
     #endregion
@@ -175,11 +179,13 @@ public class CrudDbRepositoryTests : IDisposable
     public async Task GetAll_EmptyDatabase_ShouldReturnEmptyArray()
     {
         // Act
-        Book[] result = await _repository.GetAll();
+        GetAllResult<Book> result = await _repository.GetAll();
 
         // Assert
         Assert.NotNull(result);
-        Assert.Empty(result);
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.TotalCount);
+        Assert.False(result.IsTruncated);
     }
 
     [Fact]
@@ -195,10 +201,12 @@ public class CrudDbRepositoryTests : IDisposable
         _context.ChangeTracker.Clear();
 
         // Act
-        Book[] result = await _repository.GetAll();
+        GetAllResult<Book> result = await _repository.GetAll();
 
         // Assert
-        Assert.Equal(booksToAdd, result.Length);
+        Assert.Equal(booksToAdd, result.Items.Length);
+        Assert.Equal(booksToAdd, result.TotalCount);
+        Assert.False(result.IsTruncated);
     }
 
     [Fact]
@@ -209,10 +217,10 @@ public class CrudDbRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        Book[] result = await _repository.GetAll();
+        GetAllResult<Book> result = await _repository.GetAll();
 
         // Assert
-        Assert.IsType<Book[]>(result);
+        Assert.IsType<Book[]>(result.Items);
     }
 
     [Fact]
@@ -231,11 +239,36 @@ public class CrudDbRepositoryTests : IDisposable
         _context.ChangeTracker.Clear();
 
         // Act
-        Book[] result = await _repository.GetAll();
+        GetAllResult<Book> result = await _repository.GetAll();
 
         // Assert
-        Assert.Equal(2, result.Length);
-        Assert.DoesNotContain(result, b => b.Id == firstBookId);
+        Assert.Equal(2, result.Items.Length);
+        Assert.Equal(2, result.TotalCount);
+        Assert.DoesNotContain(result.Items, b => b.Id == firstBookId);
+    }
+
+    [Fact]
+    public async Task GetAll_WhenTruncated_ShouldReportCorrectTotalCount()
+    {
+        // Arrange: configure a very small MaxGetAllCount
+        NeedleCrudSettings settings = new() { MaxGetAllCount = 2 };
+        CrudDbRepository<LibraryDbContext, Book, Guid> smallMaxRepo =
+            new(_context, Options.Create(settings));
+
+        for (int i = 0; i < 5; i++)
+        {
+            await _repository.Create(_testData.Books[i]);
+        }
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        // Act
+        GetAllResult<Book> result = await smallMaxRepo.GetAll();
+
+        // Assert
+        Assert.Equal(2, result.Items.Length);  // capped by MaxGetAllCount
+        Assert.Equal(5, result.TotalCount);    // true total
+        Assert.True(result.IsTruncated);
     }
 
     #endregion
@@ -423,7 +456,8 @@ public class CrudDbRepositoryTests : IDisposable
         await _repository.Delete(idToDelete);
         await _context.SaveChangesAsync();
 
-        Book[] remainingBooks = await _repository.GetAll();
+        GetAllResult<Book> allResult = await _repository.GetAll();
+        Book[] remainingBooks = allResult.Items;
 
         // Assert
         Assert.Equal(2, remainingBooks.Length);

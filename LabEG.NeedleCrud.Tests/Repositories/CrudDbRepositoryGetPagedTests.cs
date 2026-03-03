@@ -53,16 +53,16 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(1, result.PageMeta.PageNumber);
-        Assert.Equal(10, result.PageMeta.PageSize);
-        Assert.Equal(_testData.Books.Count, result.PageMeta.TotalElements);
-        Assert.Equal(10, result.PageMeta.ElementsInPage);
+        Assert.Equal(1, result.Meta.PageNumber);
+        Assert.Equal(10, result.Meta.PageSize);
+        Assert.Equal(_testData.Books.Count, result.Meta.TotalItems);
+        Assert.Equal(10, result.Meta.ItemsInPage);
 
         // Calculate expected total pages
         int expectedTotalPages = (_testData.Books.Count + query.PageSize - 1) / query.PageSize;
-        Assert.Equal(expectedTotalPages, result.PageMeta.TotalPages);
+        Assert.Equal(expectedTotalPages, result.Meta.TotalPages);
 
-        Assert.Equal(10, result.Elements.Count);
+        Assert.Equal(10, result.Items.Count);
     }
 
     [Fact]
@@ -82,9 +82,9 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(2, result.PageMeta.PageNumber);
-        Assert.Equal(10, result.PageMeta.PageSize);
-        Assert.Equal(10, result.Elements.Count);
+        Assert.Equal(2, result.Meta.PageNumber);
+        Assert.Equal(10, result.Meta.PageSize);
+        Assert.Equal(10, result.Items.Count);
     }
 
     [Fact]
@@ -109,9 +109,9 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(lastPage, result.PageMeta.PageNumber);
-        Assert.Equal(expectedElementsOnLastPage, result.Elements.Count);
-        Assert.Equal(expectedElementsOnLastPage, result.PageMeta.ElementsInPage);
+        Assert.Equal(lastPage, result.Meta.PageNumber);
+        Assert.Equal(expectedElementsOnLastPage, result.Items.Count);
+        Assert.Equal(expectedElementsOnLastPage, result.Meta.ItemsInPage);
     }
 
     #endregion
@@ -130,8 +130,8 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
-        Assert.All(result.Elements, book => Assert.True(book.IsAvailable));
+        Assert.Equal(expectedCount, result.Meta.TotalItems);
+        Assert.All(result.Items, book => Assert.True(book.IsAvailable));
     }
 
     [Fact]
@@ -152,8 +152,8 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
-        Assert.All(result.Elements, book =>
+        Assert.Equal(expectedCount, result.Meta.TotalItems);
+        Assert.All(result.Items, book =>
         {
             Assert.True(book.IsAvailable);
             Assert.InRange(book.PageCount, 201, 799);
@@ -178,10 +178,10 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(2, result.PageMeta.PageNumber);
-        Assert.Equal(20, result.PageMeta.PageSize);
-        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
-        Assert.All(result.Elements, book =>
+        Assert.Equal(2, result.Meta.PageNumber);
+        Assert.Equal(20, result.Meta.PageSize);
+        Assert.Equal(expectedCount, result.Meta.TotalItems);
+        Assert.All(result.Items, book =>
         {
             Assert.True(book.IsAvailable);
             Assert.True(book.PageCount >= 300);
@@ -206,9 +206,9 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(0, result.PageMeta.TotalElements);
-        Assert.Equal(1, result.PageMeta.TotalPages);
-        Assert.Empty(result.Elements);
+        Assert.Equal(0, result.Meta.TotalItems);
+        Assert.Equal(1, result.Meta.TotalPages);
+        Assert.Empty(result.Items);
     }
 
     #endregion
@@ -226,14 +226,14 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Elements.Count > 1);
+        Assert.True(result.Items.Count > 1);
 
         // Verify sorting
-        for (int i = 0; i < result.Elements.Count - 1; i++)
+        for (int i = 0; i < result.Items.Count - 1; i++)
         {
             Assert.True(
-                string.Compare(result.Elements[i].Title, result.Elements[i + 1].Title, StringComparison.Ordinal) <= 0,
-                $"Books are not sorted by Title ascending. '{result.Elements[i].Title}' should come before '{result.Elements[i + 1].Title}'"
+                string.Compare(result.Items[i].Title, result.Items[i + 1].Title, StringComparison.Ordinal) <= 0,
+                $"Books are not sorted by Title ascending. '{result.Items[i].Title}' should come before '{result.Items[i + 1].Title}'"
             );
         }
     }
@@ -250,12 +250,12 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Elements.Count > 1);
+        Assert.True(result.Items.Count > 1);
 
         // Verify primary sort by Language ascending
-        for (int i = 0; i < result.Elements.Count - 1; i++)
+        for (int i = 0; i < result.Items.Count - 1; i++)
         {
-            int languageCompare = string.Compare(result.Elements[i].Language, result.Elements[i + 1].Language, StringComparison.Ordinal);
+            int languageCompare = string.Compare(result.Items[i].Language, result.Items[i + 1].Language, StringComparison.Ordinal);
 
             if (languageCompare < 0)
             {
@@ -265,16 +265,16 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
             else if (languageCompare == 0)
             {
                 // Same language, check PageCount descending
-                if (result.Elements[i].PageCount > result.Elements[i + 1].PageCount)
+                if (result.Items[i].PageCount > result.Items[i + 1].PageCount)
                 {
                     // Correct order
                     continue;
                 }
-                else if (result.Elements[i].PageCount == result.Elements[i + 1].PageCount)
+                else if (result.Items[i].PageCount == result.Items[i + 1].PageCount)
                 {
                     // Same PageCount, check Title ascending
                     Assert.True(
-                        string.Compare(result.Elements[i].Title, result.Elements[i + 1].Title, StringComparison.Ordinal) <= 0,
+                        string.Compare(result.Items[i].Title, result.Items[i + 1].Title, StringComparison.Ordinal) <= 0,
                         "When Language and PageCount are equal, Title should be ascending"
                     );
                 }
@@ -282,7 +282,7 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
             }
             else
             {
-                Assert.Fail($"Languages are not sorted ascending: '{result.Elements[i].Language}' should come before '{result.Elements[i + 1].Language}'");
+                Assert.Fail($"Languages are not sorted ascending: '{result.Items[i].Language}' should come before '{result.Items[i + 1].Language}'");
             }
         }
     }
@@ -300,13 +300,13 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
         // Assert
         Assert.NotNull(result);
 
-        if (result.Elements.Count > 1)
+        if (result.Items.Count > 1)
         {
             // Verify sort by PublicationDate descending
-            for (int i = 0; i < result.Elements.Count - 1; i++)
+            for (int i = 0; i < result.Items.Count - 1; i++)
             {
-                DateTime current = result.Elements[i].PublicationDate;
-                DateTime next = result.Elements[i + 1].PublicationDate;
+                DateTime current = result.Items[i].PublicationDate;
+                DateTime next = result.Items[i + 1].PublicationDate;
 
                 if (current > next)
                 {
@@ -317,7 +317,7 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
                 {
                     // Same date, verify Title ascending
                     Assert.True(
-                        string.Compare(result.Elements[i].Title, result.Elements[i + 1].Title, StringComparison.Ordinal) <= 0,
+                        string.Compare(result.Items[i].Title, result.Items[i + 1].Title, StringComparison.Ordinal) <= 0,
                         "When PublicationDate is equal, Title should be ascending"
                     );
                 }
@@ -344,10 +344,10 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Elements.Count > 0);
+        Assert.True(result.Items.Count > 0);
 
         // Verify that Author navigation property is loaded
-        foreach (Book book in result.Elements)
+        foreach (Book book in result.Items)
         {
             Assert.NotNull(book.Author);
             Assert.NotEqual(Guid.Empty, book.Author.Id);
@@ -366,10 +366,10 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Elements.Count > 0);
+        Assert.True(result.Items.Count > 0);
 
         // Verify that both Author and Category navigation properties are loaded
-        foreach (Book book in result.Elements)
+        foreach (Book book in result.Items)
         {
             Assert.NotNull(book.Author);
             Assert.NotEqual(Guid.Empty, book.Author.Id);
@@ -391,11 +391,11 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Elements.Count > 0);
+        Assert.True(result.Items.Count > 0);
 
         // Navigation properties should not be null but not loaded (depending on EF Core behavior)
         // We can verify they are not explicitly loaded by checking the context entry
-        foreach (Book book in result.Elements)
+        foreach (Book book in result.Items)
         {
             EntityEntry<Book> entry = _context.Entry(book);
             Assert.False(entry.Reference(b => b.Author).IsLoaded, "Author should not be loaded without graph query");
@@ -421,22 +421,22 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
         Assert.NotNull(result);
 
         // Verify filter
-        Assert.All(result.Elements, book => Assert.True(book.IsAvailable));
+        Assert.All(result.Items, book => Assert.True(book.IsAvailable));
 
         // Verify sort
-        if (result.Elements.Count > 1)
+        if (result.Items.Count > 1)
         {
-            for (int i = 0; i < result.Elements.Count - 1; i++)
+            for (int i = 0; i < result.Items.Count - 1; i++)
             {
                 Assert.True(
-                    string.Compare(result.Elements[i].Title, result.Elements[i + 1].Title, StringComparison.Ordinal) <= 0,
+                    string.Compare(result.Items[i].Title, result.Items[i + 1].Title, StringComparison.Ordinal) <= 0,
                     "Books should be sorted by Title ascending"
                 );
             }
         }
 
         // Verify includes
-        Assert.All(result.Elements, book =>
+        Assert.All(result.Items, book =>
         {
             Assert.NotNull(book.Author);
             Assert.NotNull(book.Category);
@@ -468,9 +468,9 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(pagesBeyondTotal, result.PageMeta.PageNumber);
-        Assert.Empty(result.Elements);
-        Assert.Equal(0, result.PageMeta.ElementsInPage);
+        Assert.Equal(pagesBeyondTotal, result.Meta.PageNumber);
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.Meta.ItemsInPage);
     }
 
     [Fact]
@@ -495,9 +495,9 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(_testData.Books.Count, result.Elements.Count);
-        Assert.Equal(1, result.PageMeta.TotalPages);
-        Assert.Equal(_testData.Books.Count, result.PageMeta.ElementsInPage);
+        Assert.Equal(_testData.Books.Count, result.Items.Count);
+        Assert.Equal(1, result.Meta.TotalPages);
+        Assert.Equal(_testData.Books.Count, result.Meta.ItemsInPage);
     }
 
     [Fact]
@@ -517,9 +517,9 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result.Elements);
-        Assert.Equal(_testData.Books.Count, result.PageMeta.TotalPages);
-        Assert.Equal(1, result.PageMeta.ElementsInPage);
+        Assert.Single(result.Items);
+        Assert.Equal(_testData.Books.Count, result.Meta.TotalPages);
+        Assert.Equal(1, result.Meta.ItemsInPage);
     }
 
     #endregion
@@ -552,7 +552,7 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
             PagedList<Book> result = await _repository.GetPaged(query);
 
             // Assert
-            Assert.Equal(testCase.ExpectedPages, result.PageMeta.TotalPages);
+            Assert.Equal(testCase.ExpectedPages, result.Meta.TotalPages);
         }
     }
 
@@ -568,8 +568,8 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
         PagedList<Book> result = await _repository.GetPaged(query);
 
         // Assert
-        Assert.Equal(expectedTotalElements, result.PageMeta.TotalElements);
-        Assert.Equal(expectedTotalPages, result.PageMeta.TotalPages);
+        Assert.Equal(expectedTotalElements, result.Meta.TotalItems);
+        Assert.Equal(expectedTotalPages, result.Meta.TotalPages);
     }
 
     #endregion
@@ -604,8 +604,8 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
-        Assert.All(result.Elements, book =>
+        Assert.Equal(expectedCount, result.Meta.TotalItems);
+        Assert.All(result.Items, book =>
         {
             Assert.NotNull(book.Author);
             Assert.Equal(country, book.Author.Country);
@@ -638,8 +638,8 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
-        Assert.All(result.Elements, book =>
+        Assert.Equal(expectedCount, result.Meta.TotalItems);
+        Assert.All(result.Items, book =>
         {
             Assert.NotNull(book.Category);
             Assert.Equal(categoryName, book.Category.Name);
@@ -663,24 +663,24 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Elements.Count > 1);
+        Assert.True(result.Items.Count > 1);
 
-        for (int i = 0; i < result.Elements.Count - 1; i++)
+        for (int i = 0; i < result.Items.Count - 1; i++)
         {
             int countryCompare = string.Compare(
-                result.Elements[i].Author.Country,
-                result.Elements[i + 1].Author.Country,
+                result.Items[i].Author.Country,
+                result.Items[i + 1].Author.Country,
                 StringComparison.Ordinal);
 
             if (countryCompare < 0) continue; // correct ascending order
 
             if (countryCompare > 0)
                 Assert.Fail(
-                    $"Books not sorted by Author.Country asc: '{result.Elements[i].Author.Country}' > '{result.Elements[i + 1].Author.Country}'");
+                    $"Books not sorted by Author.Country asc: '{result.Items[i].Author.Country}' > '{result.Items[i + 1].Author.Country}'");
 
             // Same country — verify secondary sort by Title ascending
             Assert.True(
-                string.Compare(result.Elements[i].Title, result.Elements[i + 1].Title, StringComparison.Ordinal) <= 0,
+                string.Compare(result.Items[i].Title, result.Items[i + 1].Title, StringComparison.Ordinal) <= 0,
                 "When Author.Country is equal, Title should be ascending");
         }
     }
@@ -709,10 +709,10 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
+        Assert.Equal(expectedCount, result.Meta.TotalItems);
 
         // Verify filter — every book's author country must contain 'a'
-        Assert.All(result.Elements, book =>
+        Assert.All(result.Items, book =>
         {
             Assert.NotNull(book.Author);
             Assert.True(
@@ -721,11 +721,11 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
         });
 
         // Verify sort — author country ascending, then category name ascending
-        for (int i = 0; i < result.Elements.Count - 1; i++)
+        for (int i = 0; i < result.Items.Count - 1; i++)
         {
             int countryCompare = string.Compare(
-                result.Elements[i].Author.Country,
-                result.Elements[i + 1].Author.Country,
+                result.Items[i].Author.Country,
+                result.Items[i + 1].Author.Country,
                 StringComparison.Ordinal);
 
             if (countryCompare < 0) continue;
@@ -735,7 +735,7 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
             // Same author country — check Category.Name secondary sort
             Assert.True(
-                string.Compare(result.Elements[i].Category!.Name, result.Elements[i + 1].Category!.Name, StringComparison.Ordinal) <= 0,
+                string.Compare(result.Items[i].Category!.Name, result.Items[i + 1].Category!.Name, StringComparison.Ordinal) <= 0,
                 "When Author.Country is equal, Category.Name should be ascending");
         }
     }
@@ -771,8 +771,8 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedCount, result.PageMeta.TotalElements);
-        Assert.All(result.Elements, review =>
+        Assert.Equal(expectedCount, result.Meta.TotalItems);
+        Assert.All(result.Items, review =>
         {
             Assert.NotNull(review.Book);
             Assert.NotNull(review.Book.Author);
@@ -797,24 +797,24 @@ public class CrudDbRepositoryGetPagedTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.True(result.Elements.Count > 1);
+        Assert.True(result.Items.Count > 1);
 
-        for (int i = 0; i < result.Elements.Count - 1; i++)
+        for (int i = 0; i < result.Items.Count - 1; i++)
         {
             int countryCompare = string.Compare(
-                result.Elements[i].Book.Author.Country,
-                result.Elements[i + 1].Book.Author.Country,
+                result.Items[i].Book.Author.Country,
+                result.Items[i + 1].Book.Author.Country,
                 StringComparison.Ordinal);
 
             if (countryCompare < 0) continue;
 
             if (countryCompare > 0)
                 Assert.Fail(
-                    $"Reviews not sorted by Book.Author.Country asc: '{result.Elements[i].Book.Author.Country}' > '{result.Elements[i + 1].Book.Author.Country}'");
+                    $"Reviews not sorted by Book.Author.Country asc: '{result.Items[i].Book.Author.Country}' > '{result.Items[i + 1].Book.Author.Country}'");
 
             // Same country — verify secondary sort by Rating descending
             Assert.True(
-                result.Elements[i].Rating >= result.Elements[i + 1].Rating,
+                result.Items[i].Rating >= result.Items[i + 1].Rating,
                 "When Book.Author.Country is equal, Rating should be descending");
         }
     }

@@ -9,10 +9,10 @@ public class PagedList<TEntity>
     /// <summary>
     /// Gets or sets the pagination metadata including page number, size, and total counts.
     /// </summary>
-    public PageMeta PageMeta { get; set; } = new PageMeta();
+    public PageMeta Meta { get; set; } = new PageMeta();
 
     /// <summary>
     /// Gets or sets the collection of entities for the current page.
     /// </summary>
-    public IList<TEntity> Elements { get; set; } = [];
+    public IList<TEntity> Items { get; set; } = [];
 }
