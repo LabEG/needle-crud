@@ -142,6 +142,62 @@ public class Book : IEntity<Guid>
 }
 ```
 
+## Entity Design Guide
+
+NeedleCrud, like GraphQL, exposes your **entity model directly as the API surface**. Every public property becomes filterable and sortable; every navigation property becomes a graph node for eager loading. Designing entities deliberately is therefore essential.
+
+### Key rules
+
+| # | Rule | Why |
+|---|------|-----|
+| 1 | Implement `IEntity<TId>` with a simple PK (`Guid` or `int`) | Required by the library; composite keys are not supported |
+| 2 | Never expose sensitive fields as public properties | All public properties appear in responses and are filterable |
+| 3 | Declare explicit FK scalar properties (`AuthorId`) alongside navigations (`Author?`) | NeedleCrud's nested filter/sort paths require navigable property names |
+| 4 | Mark inverse navigation properties with `[JsonIgnore]` | Prevents circular reference cycles during JSON serialisation |
+| 5 | Use scalar types (`string`, `int`, `bool`, `DateTime`, …) for filtered/sorted fields | Only scalar values are usable in filter/sort expressions |
+| 6 | Keep the graph shallow (2–3 levels max) | Each `Include` level adds a database `JOIN` |
+| 7 | Initialise collection navigations: `= []` | Avoids null-reference exceptions in EF Core and serialisation |
+| 8 | Use `ICollection<T>` for collection navigations, not `List<T>` | EF Core convention; avoids unintentional `List<T>` coupling |
+
+### Minimal example
+
+```csharp
+public class Book : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public int PageCount { get; set; }
+
+    // Explicit FK scalar + nullable navigation
+    public Guid AuthorId { get; set; }
+    public Author? Author { get; set; }
+
+    public ICollection<Review> Reviews { get; set; } = [];
+}
+
+public class Author : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+
+    [JsonIgnore]  // prevents circular reference: Author → Book → Author → …
+    public ICollection<Book> Books { get; set; } = [];
+}
+```
+
+### Further reading
+
+| Topic | Resource |
+|-------|----------|
+| EF Core data modelling | [EF Core – Creating and Configuring a Model](https://learn.microsoft.com/en-us/ef/core/modeling/) |
+| EF Core relationships | [EF Core – Relationships](https://learn.microsoft.com/en-us/ef/core/modeling/relationships) |
+| EF Core performance | [EF Core – Performance](https://learn.microsoft.com/en-us/ef/core/performance/) |
+| Circular references in JSON | [System.Text.Json – Preserve references](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/preserve-references) |
+| REST API design | [Azure Architecture – API design](https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design) |
+| GraphQL schema design (conceptual parallel) | [GraphQL – Best Practices](https://graphql.org/learn/best-practices/) |
+
+---
+
 ## Custom Logic
 
 ### Custom Controller

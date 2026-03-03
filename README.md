@@ -374,6 +374,134 @@ NeedleCrud follows a clean layered architecture:
 
 ---
 
+## 🏛️ Entity Design Guide
+
+NeedleCrud, like GraphQL, exposes your **entity model directly as the API surface**. Every public property becomes filterable and sortable; every navigation property becomes a graph node for eager loading. This means entity design decisions have a direct and immediate impact on API behaviour, security, and performance.
+
+### Why it matters
+
+With a hand-written REST controller you can shape the response in the action method. With NeedleCrud (or GraphQL) the entity *is* the contract — so you must design it deliberately.
+
+### Rules
+
+#### 1. Implement `IEntity<TId>` and use a simple primary key
+
+```csharp
+// ✅ Good — Guid or int, never a composite key
+public class Book : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    // ...
+}
+```
+
+#### 2. Never expose sensitive data as public properties
+
+Every public property is reachable via `filter=`, `sort=`, and the JSON response. Sensitive fields (passwords, tokens, internal flags) must be excluded.
+
+```csharp
+// ❌ Bad — PasswordHash will appear in API responses and be filterable
+public class User : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty; // exposed!
+}
+
+// ✅ Good — keep secrets out of entity or use [JsonIgnore]
+public class User : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public string PasswordHash { get; set; } = string.Empty;
+}
+```
+
+#### 3. Declare explicit foreign key properties
+
+EF Core works with shadow FK properties, but NeedleCrud filtering needs a named, navigable property path. Declare both the FK scalar and the navigation property:
+
+```csharp
+// ✅ Good
+public class Book : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+
+    public Guid AuthorId { get; set; }     // scalar FK — filterable: author.id
+    public Author? Author { get; set; }    // navigation — graph-loadable
+}
+```
+
+#### 4. Make navigation properties nullable and use `[JsonIgnore]` on inverse navigations
+
+Navigation properties that point *back* to the parent create circular reference cycles during JSON serialisation. Mark inverse navigations with `[JsonIgnore]`:
+
+```csharp
+// ✅ Good
+public class Author : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+
+    [JsonIgnore]                               // prevents circular reference
+    public ICollection<Book> Books { get; set; } = [];
+}
+
+public class Book : IEntity<Guid>
+{
+    public Guid Id { get; set; }
+    public Guid AuthorId { get; set; }
+    public Author? Author { get; set; }        // nullable — loaded on demand
+}
+```
+
+#### 5. Use scalar types for properties that will be filtered or sorted
+
+Filtering and sorting work on scalar values (`string`, `int`, `bool`, `DateTime`, `Guid`, `decimal`, …). Navigation properties themselves cannot be used as filter targets — only their nested scalar fields can.
+
+```csharp
+// ✅ filter=author.country~=~UK   ← scalar field on a navigation property
+// ❌ filter=author~=~something    ← navigation object — not supported
+```
+
+#### 6. Keep the graph shallow — avoid deep or wide navigation trees
+
+Every level of eager loading adds a `JOIN`. Design entities so that the data you really need is reachable in 2–3 levels. Move rarely-needed aggregates to dedicated endpoints.
+
+```
+Book → Author (level 2) → Country (level 3) ← reasonable
+Book → Author → Books → Reviews → User → … ← avoid
+```
+
+#### 7. Use `ICollection<T>` (not `List<T>`) for collection navigations
+
+EF Core and System.Text.Json serialise both, but `ICollection<T>` is the conventional choice and avoids accidental coupling to `List<T>` methods.
+
+#### 8. Initialize collection navigations to avoid null reference exceptions
+
+```csharp
+public ICollection<Review> Reviews { get; set; } = [];
+```
+
+#### 9. Consider a DTO projection layer for complex read scenarios
+
+When the entity shape needed by clients diverges significantly from the storage model, introduce explicit ViewModels and override the `GetPaged` / `GetById` methods in your controller to project with `Select(...)`.
+
+### Further reading
+
+| Topic | Resource |
+|-------|----------|
+| EF Core data model conventions | [EF Core – Creating and Configuring a Model](https://learn.microsoft.com/en-us/ef/core/modeling/) |
+| EF Core relationships | [EF Core – Relationships](https://learn.microsoft.com/en-us/ef/core/modeling/relationships) |
+| EF Core performance | [EF Core – Performance](https://learn.microsoft.com/en-us/ef/core/performance/) |
+| Avoiding circular references in JSON | [System.Text.Json – How to handle circular references](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/preserve-references) |
+| REST API design | [Microsoft Azure – API design best practices](https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design) |
+| GraphQL schema design (conceptual parallel) | [GraphQL – Best Practices](https://graphql.org/learn/best-practices/) |
+
+---
+
 ## 🔒 Security
 
 NeedleCrud exposes all CRUD operations automatically, which is powerful — and requires you to think about access control from the start. Below are the recommended patterns.
