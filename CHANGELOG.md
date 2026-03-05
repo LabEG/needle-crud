@@ -1,4 +1,21 @@
 # Changelog
+<a name="0.5.0"></a>
+## [0.5.0](https://github.com/LabEG/needle-crud/compare/v0.4.0...v0.5.0) (2026-03-05)
+
+### ### 🚀 Features
+
+* add script to run tests with code coverage and generate HTML reports ([3316c73](https://github.com/LabEG/needle-crud/commit/3316c732ac68ed5e661e1f3b6dc25c63c0f4e096))
+* implement UnitOfWork setting for repository auto-commit behavior ([18b3792](https://github.com/LabEG/needle-crud/commit/18b37926516a898ab157fd5570f4ba9c986697e1))
+
+### ### ♻️ Refactoring
+
+* CRUD operations to support cancellation tokens and improve response handling ([b34abd6](https://github.com/LabEG/needle-crud/commit/b34abd66e32b97c64292715272aa871c7e8dc87b))
+* CRUD repository update method to handle concurrency exceptions ([1520439](https://github.com/LabEG/needle-crud/commit/15204391a4bfd5cadd5af15c5ecd6f29ab6a0c92))
+
+### ### 📝 Documentation
+
+* add entity design guide with best practices for NeedleCrud ([a7220e4](https://github.com/LabEG/needle-crud/commit/a7220e4dc896e2d0a3485536404fc634e0ea4077))
+
 <a name="0.4.0"></a>
 ## [0.4.0](https://github.com/LabEG/needle-crud/compare/v0.3.1...v0.4.0) (2026-03-02)
 

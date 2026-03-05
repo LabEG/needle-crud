@@ -9,7 +9,7 @@
 
     <!-- NuGet Package Metadata -->
     <PackageId>LabEG.NeedleCrud</PackageId>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Authors>LabEG</Authors>
     <Company>LabEG</Company>
     <Product>NeedleCrud</Product>
