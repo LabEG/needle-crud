@@ -1,4 +1,11 @@
 # Changelog
+<a name="0.5.1"></a>
+## [0.5.1](https://github.com/LabEG/needle-crud/compare/v0.5.0...v0.5.1) (2026-03-05)
+
+### ### 🐛 Bug Fixes
+
+* update actions/checkout to version 6 in Docker publish workflow ([1d230f8](https://github.com/LabEG/needle-crud/commit/1d230f8a686665b32ea2d0eea64612bc3014aad2))
+
 <a name="0.5.0"></a>
 ## [0.5.0](https://github.com/LabEG/needle-crud/compare/v0.4.0...v0.5.0) (2026-03-05)
 
