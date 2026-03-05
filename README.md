@@ -647,7 +647,8 @@ NeedleCrud works out of the box with sensible defaults — no configuration requ
     "MaxPageSize":    50,
     "MaxFilterCount": 20,
     "MaxSortCount":   10,
-    "MaxGraphDepth":  8
+    "MaxGraphDepth":  8,
+    "UnitOfWork":     false
   }
 }
 ```
@@ -669,6 +670,7 @@ builder.Services.Configure<NeedleCrudSettings>(options =>
     options.MaxFilterCount = 20;    // default: 50
     options.MaxSortCount   = 10;    // default: 50
     options.MaxGraphDepth  = 8;     // default: 16
+    options.UnitOfWork     = false; // default: false
 });
 ```
 
@@ -688,6 +690,7 @@ public class BooksController(ICrudDbService<MyDbContext, Book, Guid> service)
 | `MaxFilterCount` | 50 | Maximum number of filter conditions |
 | `MaxSortCount` | 50 | Maximum number of sort conditions |
 | `MaxGraphDepth` | 16 | Maximum depth of nested eager-loading graph |
+| `UnitOfWork` | false | When `true`, the repository auto-commits after each write (Create/Update/Delete) via `SaveChangesAsync`, and `CrudDbService` skips the redundant save. When `false` (default), `CrudDbService` is responsible for committing — use this mode when you want to batch multiple operations in one transaction. |
 
 ---
 

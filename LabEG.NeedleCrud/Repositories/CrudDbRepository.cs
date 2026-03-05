@@ -9,6 +9,7 @@ using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Settings;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Options;
 
 namespace LabEG.NeedleCrud.Repositories;
@@ -49,6 +50,11 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
         entity.Id = default;
         await DBContext.Set<TEntity>().AddAsync(entity, ct);
 
+        if (_settings.UnitOfWork)
+        {
+            await DBContext.SaveChangesAsync(ct);
+        }
+
         return entity;
     }
 
@@ -78,13 +84,13 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     }
 
     /// <inheritdoc/>
-    public virtual Task Update(TId id, TEntity entity, CancellationToken ct = default)
+    public virtual async Task Update(TId id, TEntity entity, CancellationToken ct = default)
     {
         entity.Id = id;
 
         // Detach any already-tracked instance with the same key to avoid
         // "another instance with same key is tracked" conflict.
-        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<TEntity>? tracked =
+        EntityEntry<TEntity>? tracked =
             DBContext.ChangeTracker
                 .Entries<TEntity>()
                 .FirstOrDefault(e => e.Entity.Id!.Equals(id));
@@ -96,10 +102,21 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
 
         // Mark the entity as modified so SaveChangesAsync issues a single UPDATE.
         // If the row does not exist the UPDATE will affect 0 rows and EF Core will
-        // throw DbUpdateConcurrencyException, which is caught by the service layer.
+        // throw DbUpdateConcurrencyException.
         DBContext.Entry(entity).State = EntityState.Modified;
 
-        return Task.CompletedTask;
+        if (_settings.UnitOfWork)
+        {
+            try
+            {
+                await DBContext.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ObjectNotFoundNeedleCrudException(
+                    $"{typeof(TEntity).Name} with ID '{id}' not found");
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -107,6 +124,11 @@ public class CrudDbRepository<TDbContext, TEntity, TId> : ICrudDbRepository<TDbC
     {
         TEntity entity = await GetById(id, ct);
         DBContext.Set<TEntity>().Remove(entity);
+
+        if (_settings.UnitOfWork)
+        {
+            await DBContext.SaveChangesAsync(ct);
+        }
     }
 
     /// <inheritdoc/>

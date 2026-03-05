@@ -3,7 +3,9 @@ using LabEG.NeedleCrud.Models.Exceptions;
 using LabEG.NeedleCrud.Models.ViewModels;
 using LabEG.NeedleCrud.Models.ViewModels.PaginationViewModels;
 using LabEG.NeedleCrud.Repositories;
+using LabEG.NeedleCrud.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Text.Json.Nodes;
 
 namespace LabEG.NeedleCrud.Services;
@@ -29,22 +31,29 @@ where TEntity : class, IEntity<TId>, new()
     /// </summary>
     protected ICrudDbRepository<TDbContext, TEntity, TId> Repository { get; }
 
+    private readonly NeedleCrudSettings _settings;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CrudDbService{TDbContext, TEntity, TId}"/> class.
     /// </summary>
     /// <param name="dbContext">The Entity Framework Core database context to use for database operations.</param>
     /// <param name="repository">The CRUD repository instance to delegate data access operations to.</param>
-    public CrudDbService(TDbContext dbContext, ICrudDbRepository<TDbContext, TEntity, TId> repository)
+    /// <param name="settings">Optional NeedleCrud settings; falls back to defaults when not registered in DI.</param>
+    public CrudDbService(TDbContext dbContext, ICrudDbRepository<TDbContext, TEntity, TId> repository, IOptions<NeedleCrudSettings>? settings = null)
     {
         DBContext = dbContext;
         Repository = repository;
+        _settings = settings?.Value ?? new NeedleCrudSettings();
     }
 
     /// <inheritdoc/>
     public virtual async Task<TEntity> Create(TEntity entity, CancellationToken ct = default)
     {
         TEntity resultEntity = await Repository.Create(entity, ct);
-        await DBContext.SaveChangesAsync(ct);
+        if (!_settings.UnitOfWork)
+        {
+            await DBContext.SaveChangesAsync(ct);
+        }
         return resultEntity;
     }
 
@@ -65,16 +74,19 @@ where TEntity : class, IEntity<TId>, new()
     public virtual async Task Update(TId id, TEntity entity, CancellationToken ct = default)
     {
         await Repository.Update(id, entity, ct);
-        try
+        if (!_settings.UnitOfWork)
         {
-            await DBContext.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            // EF Core throws DbUpdateConcurrencyException when the UPDATE affects 0 rows,
-            // which means the entity with the given id does not exist in the database.
-            throw new ObjectNotFoundNeedleCrudException(
-                $"{typeof(TEntity).Name} with ID '{id}' not found");
+            try
+            {
+                await DBContext.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // EF Core throws DbUpdateConcurrencyException when the UPDATE affects 0 rows,
+                // which means the entity with the given id does not exist in the database.
+                throw new ObjectNotFoundNeedleCrudException(
+                    $"{typeof(TEntity).Name} with ID '{id}' not found");
+            }
         }
     }
 
@@ -82,7 +94,10 @@ where TEntity : class, IEntity<TId>, new()
     public virtual async Task Delete(TId id, CancellationToken ct = default)
     {
         await Repository.Delete(id, ct);
-        await DBContext.SaveChangesAsync(ct);
+        if (!_settings.UnitOfWork)
+        {
+            await DBContext.SaveChangesAsync(ct);
+        }
     }
 
     /// <inheritdoc/>

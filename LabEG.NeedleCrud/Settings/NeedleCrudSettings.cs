@@ -117,4 +117,29 @@ public class NeedleCrudSettings
     /// limit on the total number of relations that can be included in a single query.
     /// </remarks>
     public int MaxGraphDepth { get; set; } = 16;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the repository layer acts as its own
+    /// Unit of Work by automatically calling <c>SaveChangesAsync</c> after each
+    /// write operation (Create, Update, Delete).
+    /// </summary>
+    /// <value>
+    /// <c>true</c> — the repository calls <c>SaveChangesAsync</c> internally after
+    /// every write, and <see cref="Services.CrudDbService{TDbContext,TEntity,TId}"/>
+    /// skips the redundant save call.
+    /// <para/>
+    /// <c>false</c> (default) — the repository only stages changes in the
+    /// <see cref="Microsoft.EntityFrameworkCore.DbContext"/> change tracker;
+    /// <see cref="Services.CrudDbService{TDbContext,TEntity,TId}"/> is responsible
+    /// for committing via <c>SaveChangesAsync</c>. This is also the mode to choose
+    /// when you manage the transaction boundary yourself (e.g. batching multiple
+    /// service calls before a single commit).
+    /// </value>
+    /// <remarks>
+    /// Set to <c>true</c> when you use <c>CrudDbRepository</c> directly — without
+    /// going through <c>CrudDbService</c> — and want each operation to be persisted
+    /// immediately. When using the full service stack the default (<c>false</c>) is
+    /// recommended because it gives you control over transaction granularity.
+    /// </remarks>
+    public bool UnitOfWork { get; set; } = false;
 }
